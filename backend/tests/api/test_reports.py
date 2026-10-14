@@ -4,13 +4,14 @@
 import time
 from uuid import UUID
 
-from app.models.core import BugReport
 from tests.conftest import (
     VALID_REPORT_TEXT,
     TestingSessionLocal,
     create_report,
     register_and_login,
 )
+
+from app.models.core import BugReport
 
 
 class TestCreateReport:
