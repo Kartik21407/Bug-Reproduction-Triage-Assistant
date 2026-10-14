@@ -1,0 +1,39 @@
+# Environment and secrets
+.env
+.env.*
+!.env.example
+
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv/
+venv/
+.pytest_cache/
+.ruff_cache/
+.mypy_cache/
+.coverage
+htmlcov/
+
+# Node
+node_modules/
+dist/
+dist-ssr/
+.vite/
+coverage/
+*.local
+
+# Model caches
+.cache/
+.huggingface/
+.fastembed_cache/
+*.onnx
+*.pt
+*.bin
+
+# Editors and operating system
+.vscode/
+.idea/
+*.swp
+.DS_Store
+Thumbs.db
