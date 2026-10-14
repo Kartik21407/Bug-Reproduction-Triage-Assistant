@@ -2,6 +2,8 @@
 stored hashed."""
 
 from sqlalchemy import select
+
+from app.models.core import User
 from tests.conftest import (
     VALID_PASSWORD,
     TestingSessionLocal,
@@ -9,8 +11,6 @@ from tests.conftest import (
     register_and_login,
     register_user,
 )
-
-from app.models.core import User
 
 
 class TestRegister:
