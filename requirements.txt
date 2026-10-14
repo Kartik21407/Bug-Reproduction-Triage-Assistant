@@ -1,0 +1,46 @@
+# Backend and tooling dependencies for the Bug Reproduction & Triage Assistant.
+#
+# All Python work happens inside the project virtual environment. Create it
+# once, then activate it at the start of every session:
+#
+#   python -m venv .venv
+#   .venv\Scripts\activate           (Windows)
+#   source .venv/bin/activate        (macOS and Linux)
+#   pip install -r requirements.txt
+#
+# Direct dependencies are pinned so that all ten of us install the same
+# versions. Transitive dependencies are resolved by pip.
+#
+# To change a version: edit it here, reinstall, run the backend checks, and
+# say what changed and why in the pull request. Do not upgrade a pin as a
+# side effect of unrelated work.
+
+# --- Web framework and validation ---------------------------------------
+fastapi==0.141.1
+uvicorn[standard]==0.53.0
+pydantic==2.13.5
+pydantic-settings==2.15.0
+# Powers pydantic.EmailStr, used to validate the email field (US-01 criterion 1).
+email-validator==2.3.0
+
+# --- Database ------------------------------------------------------------
+sqlalchemy==2.0.54
+alembic==1.20.0
+psycopg[binary]==3.3.5
+
+# --- Authentication ------------------------------------------------------
+# Session tokens, as a JWT in an httpOnly cookie. See ADR-004 in docs/adr.md.
+pyjwt==2.14.0
+# Password hashing. NFR-03 requires salted argon2 or bcrypt hashes.
+argon2-cffi==25.1.0
+
+# --- Tests and code quality ---------------------------------------------
+pytest==9.1.1
+# Required by fastapi.testclient for the API tests.
+httpx==0.28.1
+ruff==0.16.8
+pre-commit==4.6.2
+
+# --- Repository tooling --------------------------------------------------
+# Validates docker-compose.yml, .pre-commit-config.yaml and the CI workflow.
+pyyaml==6.0.3
