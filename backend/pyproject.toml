@@ -1,0 +1,45 @@
+# Tool configuration for the backend.
+#
+# Dependencies are NOT listed here. They live in the single requirements.txt at
+# the repository root, so there is one place to change a version and no chance
+# of the two drifting apart. This file configures ruff and pytest only.
+
+[project]
+name = "bug-triage-backend"
+version = "0.1.0"
+description = "FastAPI backend for the Bug Reproduction & Triage Assistant"
+requires-python = ">=3.12"
+
+[tool.ruff]
+line-length = 100
+target-version = "py312"
+exclude = ["alembic/versions"]
+
+[tool.ruff.lint]
+select = [
+    "E",   # pycodestyle errors
+    "W",   # pycodestyle warnings
+    "F",   # pyflakes
+    "I",   # import sorting
+    "B",   # bugbear
+    "UP",  # pyupgrade
+    "C4",  # comprehensions
+    "SIM", # simplify
+]
+
+[tool.ruff.lint.flake8-bugbear]
+# FastAPI's own pattern for declaring a dependency or query parameter is a
+# function call used as the argument default (Depends(...), Query(...)).
+# B008 exists to catch accidental mutable defaults, not this.
+extend-immutable-calls = ["fastapi.Depends", "fastapi.Query"]
+
+[tool.ruff.lint.per-file-ignores]
+# Assertions are the point of a test file.
+"tests/**" = ["S101"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+# Puts backend/ on sys.path so tests can import `app` without the package
+# being installed. Nothing here is built or published as a wheel.
+pythonpath = ["."]
+addopts = "-ra"
