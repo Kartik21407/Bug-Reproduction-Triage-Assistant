@@ -78,7 +78,9 @@ def list_reports(
     return ReportListResponse(items=list(reports), total=len(reports))
 
 
-def _get_owned_report_or_404(db: DbSession, current_user, report_id: UUID) -> BugReport:
+def get_owned_report_or_404(db: DbSession, current_user, report_id: UUID) -> BugReport:
+    """Shared with `app/api/analysis.py`, so the NFR-15 404 rule has one
+    implementation, not one per router that touches a report by id."""
     report = db.execute(
         select(BugReport).where(BugReport.id == report_id, BugReport.user_id == current_user.id)
     ).scalar_one_or_none()
@@ -94,7 +96,7 @@ def _get_owned_report_or_404(db: DbSession, current_user, report_id: UUID) -> Bu
 def read_report(report_id: UUID, current_user: CurrentUser, db: DbSession) -> BugReport:
     """Returns one report. 404 for an unknown id or one belonging to another
     user (NFR-15, US-02 criterion 2)."""
-    return _get_owned_report_or_404(db, current_user, report_id)
+    return get_owned_report_or_404(db, current_user, report_id)
 
 
 @router.patch("/{report_id}", response_model=ReportRead)
@@ -105,7 +107,7 @@ def update_report(
     the request body are changed. Editing the original text returns the
     report to Draft, so analysis can be run again once it exists
     (US-07 criterion 1). 404 rules match every other report endpoint."""
-    report = _get_owned_report_or_404(db, current_user, report_id)
+    report = get_owned_report_or_404(db, current_user, report_id)
 
     changes = body.model_dump(exclude_unset=True)
     if "original_text" in changes:
@@ -124,10 +126,10 @@ def delete_report(report_id: UUID, current_user: CurrentUser, db: DbSession) -> 
     """Deletes a report. Everything linked to it is removed too, through
     ON DELETE CASCADE on the foreign key (US-07 criterion 2). No linked
     analysis data exists yet this sprint, since the tables that will
-    reference a report arrive in a later sprint; the cascade is what
+    reference a report arrive in Sprint 2 and Sprint 3; the cascade is what
     makes this criterion hold once they do. 404 rules match every other
     report endpoint. Confirmation is a frontend responsibility; this
     endpoint deletes unconditionally once called."""
-    report = _get_owned_report_or_404(db, current_user, report_id)
+    report = get_owned_report_or_404(db, current_user, report_id)
     db.delete(report)
     db.commit()
