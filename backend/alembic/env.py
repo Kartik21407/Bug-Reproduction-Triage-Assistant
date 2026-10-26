@@ -13,7 +13,7 @@ from app.db import Base
 
 # Imported so every module's tables register on Base.metadata before
 # autogenerate diffs against it.
-from app.models import core  # noqa: F401
+from app.models import analysis, core  # noqa: F401
 
 config = context.config
 

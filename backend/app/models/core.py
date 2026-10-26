@@ -9,11 +9,15 @@ docs/adr.md.
 
 import uuid
 from datetime import datetime
+from typing import TYPE_CHECKING
 
 from sqlalchemy import CheckConstraint, DateTime, ForeignKey, String, Text, func
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.db import Base
+
+if TYPE_CHECKING:
+    from app.models.analysis import EnvironmentDetail, ExtractedField, FollowUpQuestion
 
 
 class User(Base):
@@ -74,3 +78,14 @@ class BugReport(Base):
     )
 
     user: Mapped["User"] = relationship(back_populates="reports")
+    # Sprint 2 (app/models/analysis.py). Forward-referenced by class name,
+    # not imported, so this module does not depend on that one.
+    extracted_fields: Mapped[list["ExtractedField"]] = relationship(
+        back_populates="report", cascade="all, delete-orphan"
+    )
+    environment_details: Mapped[list["EnvironmentDetail"]] = relationship(
+        back_populates="report", cascade="all, delete-orphan"
+    )
+    follow_up_questions: Mapped[list["FollowUpQuestion"]] = relationship(
+        back_populates="report", cascade="all, delete-orphan"
+    )

@@ -21,6 +21,11 @@ class Settings(BaseSettings):
     session_cookie_name: str = "session"
     cookie_secure: bool = False
 
+    gemini_api_key: str = ""
+    # gemini-2.5-flash and gemini-2.5-flash-lite both returned 404 "no
+    # longer available to new users" against a real key; confirmed working.
+    gemini_model: str = "gemini-3.1-flash-lite"
+
 
 @lru_cache
 def get_settings() -> Settings:
