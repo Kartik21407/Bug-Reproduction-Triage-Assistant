@@ -20,11 +20,6 @@ from sqlalchemy.pool import StaticPool
 
 from app.config import get_settings
 from app.db import Base, get_db
-
-# Import model modules so SQLAlchemy registers their tables
-from app.models.core import User, BugReport
-from app.models import analysis
-
 from app.main import app
 
 get_settings.cache_clear()
