@@ -34,6 +34,10 @@ pyjwt==2.14.0
 # Password hashing. NFR-03 requires salted argon2 or bcrypt hashes.
 argon2-cffi==25.1.0
 
+# --- Extraction -----------------------------------------------------------
+# Gemini client used by the extraction pipeline (backend/app/analysis/prompts/extraction.v1.md).
+google-genai==2.25.0
+
 # --- Tests and code quality ---------------------------------------------
 pytest==9.1.1
 # Required by fastapi.testclient for the API tests.
