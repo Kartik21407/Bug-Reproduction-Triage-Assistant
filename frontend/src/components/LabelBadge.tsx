@@ -1,3 +1,7 @@
+// A small pill showing one of the four verification labels (FR-27). Colour
+// is the only thing that varies; the text is always the label's own name,
+// never abbreviated, so a screen reader announces exactly what is shown.
+
 import type { Label } from '@/types/api';
 
 const LABEL_STYLES: Record<Label, string> = {

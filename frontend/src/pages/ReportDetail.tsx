@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { useNavigate, useParams } from 'react-router-dom';
+import { Link, useNavigate, useParams } from 'react-router-dom';
 import { useDeleteReport, useReport, useUpdateReport } from '@/hooks/useReports';
 import { ApiRequestError } from '@/lib/api';
 import { ErrorState, LoadingState } from '@/components/states';
@@ -95,6 +95,18 @@ export default function ReportDetail() {
       <div className="flex items-center justify-between">
         <h1 className="text-xl font-semibold">{report.title ?? 'Untitled report'}</h1>
         <div className="flex gap-3">
+          {!isEditing && (
+            <Link
+              to={
+                report.state === 'Draft'
+                  ? `/reports/${report.id}/mask`
+                  : `/reports/${report.id}/analysis`
+              }
+              className="rounded-md border px-3 py-2 text-sm font-medium"
+            >
+              {report.state === 'Draft' ? 'Analyse' : 'View analysis'}
+            </Link>
+          )}
           {!isEditing && (
             <button
               type="button"
