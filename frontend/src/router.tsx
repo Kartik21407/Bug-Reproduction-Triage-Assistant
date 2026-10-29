@@ -8,6 +8,8 @@ import Register from '@/pages/Register';
 import NewReport from '@/pages/NewReport';
 import History from '@/pages/History';
 import ReportDetail from '@/pages/ReportDetail';
+import MaskingReview from '@/pages/MaskingReview';
+import AnalysisReview from '@/pages/AnalysisReview';
 import { ProtectedRoute } from '@/components/layout/ProtectedRoute';
 import { useLogout } from '@/hooks/useAuth';
 
@@ -50,6 +52,8 @@ export function AppRouter() {
         <Route path="/reports/new" element={<NewReport />} />
         <Route path="/reports" element={<History />} />
         <Route path="/reports/:id" element={<ReportDetail />} />
+        <Route path="/reports/:id/mask" element={<MaskingReview />} />
+        <Route path="/reports/:id/analysis" element={<AnalysisReview />} />
       </Route>
       <Route path="*" element={<Navigate to="/login" replace />} />
     </Routes>
