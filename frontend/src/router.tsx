@@ -8,6 +8,17 @@ import Register from '@/pages/Register';
 import NewReport from '@/pages/NewReport';
 import History from '@/pages/History';
 import ReportDetail from '@/pages/ReportDetail';
+import MaskingReview from '@/pages/MaskingReview';
+// Temporary placeholder for "/reports/:id/analysis" (Story US-13/14 builds the full page)
+function AnalysisReviewPlaceholder() {
+  return (
+    <div className="flex min-h-screen flex-col items-center justify-center gap-4 p-6 text-center">
+      <p className="text-sm text-muted-foreground">
+        Analysis review will be built in the next story.
+      </p>
+    </div>
+  );
+}
 import { ProtectedRoute } from '@/components/layout/ProtectedRoute';
 import { useLogout } from '@/hooks/useAuth';
 
@@ -50,6 +61,8 @@ export function AppRouter() {
         <Route path="/reports/new" element={<NewReport />} />
         <Route path="/reports" element={<History />} />
         <Route path="/reports/:id" element={<ReportDetail />} />
+        <Route path="/reports/:id/mask" element={<MaskingReview />} />
+        <Route path="/reports/:id/analysis" element={<AnalysisReviewPlaceholder />} />
       </Route>
       <Route path="*" element={<Navigate to="/login" replace />} />
     </Routes>
