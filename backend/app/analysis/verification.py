@@ -2,8 +2,8 @@
 
 Nothing the model produces is trusted until it passes through here. This
 module decides every label; the model's own stated confidence is carried
-through for the user to see but never decides anything (the governing
-principle in the root CLAUDE.md). Nothing in this module calls a model or
+through for the user to see but never decides anything (ADR-014: the
+model extracts, code verifies and decides). Nothing in this module calls a model or
 depends on one being reachable, which is what lets it be tested completely
 on its own.
 """

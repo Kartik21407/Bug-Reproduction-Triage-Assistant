@@ -4,7 +4,7 @@ against a real Gemini call.
 
 This is deliberately not part of the default `pytest -q` run. Everywhere
 else in this project, "no test needs a network call" is a hard rule (see
-`backend/tests/analysis/CLAUDE.md`); this suite is the one stated
+`docs/conventions.md` section 10); this suite is the one stated
 exception ADR-019 requires, since NFR-20 is specifically about how the real
 model behaves, not about the deterministic code around it. It costs a real
 API call per case and is not deterministic, so it only runs when explicitly
