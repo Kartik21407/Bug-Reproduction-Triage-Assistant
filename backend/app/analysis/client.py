@@ -32,9 +32,8 @@ from app.config import Settings, get_settings
 # to flag back against NFR-19's wording.
 TIMEOUT_SECONDS = 10
 
-# Lives under app/analysis/, not docs/, since it is read by this module at
-# runtime, not written material (see root CLAUDE.md's commit plan
-# conventions: nothing under docs/ is ever committed).
+# Lives beside this module rather than under docs/, since it is read at
+# runtime and ships inside the backend image (ADR-022).
 _PROMPT_PATH = Path(__file__).resolve().parent / "prompts" / "extraction.v1.md"
 _PROMPT_MARKER = "## System prompt text"
 

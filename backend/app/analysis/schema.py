@@ -6,7 +6,7 @@ reason, never a label. The plain models (`ExtractedField`,
 `EnvironmentDetail`, `ExtractionResult`) are what verification produces:
 the same data, plus the label that decides whether any of it is trusted.
 The model never assigns a label; only `app.analysis.verification` does
-(the governing principle in the root CLAUDE.md).
+(ADR-014: the model extracts, code verifies and decides).
 """
 
 from enum import StrEnum
