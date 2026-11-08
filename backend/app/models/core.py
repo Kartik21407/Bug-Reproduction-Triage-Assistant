@@ -18,6 +18,8 @@ from app.db import Base
 
 if TYPE_CHECKING:
     from app.models.analysis import EnvironmentDetail, ExtractedField, FollowUpQuestion
+    from app.models.corpus import DuplicateCandidate, ReportEmbedding
+    from app.models.triage import TriageOverride, TriageValue
 
 
 class User(Base):
@@ -88,4 +90,29 @@ class BugReport(Base):
     )
     follow_up_questions: Mapped[list["FollowUpQuestion"]] = relationship(
         back_populates="report", cascade="all, delete-orphan"
+    )
+    # Sprint 3 (app/models/triage.py and app/models/corpus.py), forward
+    # referenced the same way.
+    triage_values: Mapped[list["TriageValue"]] = relationship(
+        back_populates="report", cascade="all, delete-orphan"
+    )
+    triage_overrides: Mapped[list["TriageOverride"]] = relationship(
+        back_populates="report", cascade="all, delete-orphan"
+    )
+    embedding: Mapped["ReportEmbedding | None"] = relationship(
+        back_populates="report", cascade="all, delete-orphan", uselist=False
+    )
+    duplicate_candidates: Mapped[list["DuplicateCandidate"]] = relationship(
+        back_populates="report",
+        cascade="all, delete-orphan",
+        foreign_keys="DuplicateCandidate.report_id",
+        order_by="DuplicateCandidate.rank",
+    )
+    # Rows where this report is the candidate found for another report.
+    # Deleting this report removes them too, so no candidate ever points at a
+    # report that no longer exists (US-07 criterion 2).
+    cited_as_candidate: Mapped[list["DuplicateCandidate"]] = relationship(
+        back_populates="candidate_report",
+        cascade="all, delete-orphan",
+        foreign_keys="DuplicateCandidate.candidate_report_id",
     )
