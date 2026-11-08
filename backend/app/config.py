@@ -22,9 +22,19 @@ class Settings(BaseSettings):
     cookie_secure: bool = False
 
     gemini_api_key: str = ""
-    # gemini-2.5-flash and gemini-2.5-flash-lite both returned 404 "no
-    # longer available to new users" against a real key; confirmed working.
-    gemini_model: str = "gemini-3.1-flash-lite"
+    # gemini-2.5-flash and gemini-2.5-flash-lite return 404 for new keys, and
+    # gemini-3.1-flash-lite answered 503 "high demand" for days; this one is
+    # confirmed working against the real extraction prompt (ADR-026).
+    gemini_model: str = "gemini-3.5-flash-lite"
+
+    # Where the embedding model is stored after its one-time download.
+    # Relative to the backend's working directory, so inside Docker it lands
+    # in the bind-mounted backend/ folder and survives a container restart.
+    embedding_cache_dir: str = ".fastembed_cache"
+    # US-20 criterion 2's starting thresholds. An estimate to be revisited,
+    # not tuned against labelled data (ADR-018).
+    duplicate_likely_threshold: float = 0.80
+    duplicate_possible_threshold: float = 0.60
 
 
 @lru_cache

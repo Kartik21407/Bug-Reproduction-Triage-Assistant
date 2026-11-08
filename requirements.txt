@@ -38,6 +38,13 @@ argon2-cffi==25.1.0
 # Gemini client used by the extraction pipeline (backend/app/analysis/prompts/extraction.v1.md).
 google-genai==2.25.0
 
+# --- Duplicate detection --------------------------------------------------
+# Sentence embeddings for duplicate search (D11, FR-17): the all-MiniLM-L6-v2
+# model through its ONNX build. The model itself downloads once, on first use.
+fastembed==0.9.0
+# The pgvector column type and cosine distance for SQLAlchemy (ADR-003).
+pgvector==0.5.1
+
 # --- Tests and code quality ---------------------------------------------
 pytest==9.1.1
 # Required by fastapi.testclient for the API tests.
