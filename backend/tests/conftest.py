@@ -5,7 +5,9 @@ Tests run against SQLite rather than PostgreSQL so the suite needs no
 external service. CI and production always run PostgreSQL. See ADR-013 in
 docs/adr.md."""
 
+import hashlib
 import os
+import re
 from collections.abc import Generator
 
 os.environ.setdefault("DATABASE_URL", "sqlite:///:memory:")
@@ -19,8 +21,10 @@ from sqlalchemy.orm import Session, sessionmaker
 from sqlalchemy.pool import StaticPool
 
 from app.config import get_settings
+from app.corpus import embedding
 from app.db import Base, get_db
 from app.main import app
+from app.models.types import EMBEDDING_DIMENSIONS
 
 get_settings.cache_clear()
 
@@ -53,6 +57,29 @@ def _override_get_db() -> Generator[Session, None, None]:
 
 
 app.dependency_overrides[get_db] = _override_get_db
+
+
+def fake_embed(texts: list[str]) -> list[list[float]]:
+    """A deterministic stand-in for the real embedding model: each word is
+    hashed to one of the dimensions, then the vector is scaled to unit
+    length. Texts sharing words score higher, identical texts score 1.0,
+    and nothing is downloaded or loaded."""
+    vectors = []
+    for text in texts:
+        vector = [0.0] * EMBEDDING_DIMENSIONS
+        for word in re.findall(r"[a-z0-9]+", text.lower()):
+            digest = hashlib.md5(word.encode(), usedforsecurity=False).hexdigest()
+            vector[int(digest, 16) % EMBEDDING_DIMENSIONS] += 1.0
+        norm = sum(component * component for component in vector) ** 0.5
+        vectors.append([component / norm for component in vector] if norm else vector)
+    return vectors
+
+
+@pytest.fixture(autouse=True)
+def _no_real_embedding_model(monkeypatch: pytest.MonkeyPatch) -> None:
+    """No test ever loads or downloads the real embedding model, the same
+    rule that keeps every test away from a real Gemini call."""
+    monkeypatch.setattr(embedding, "embed", fake_embed)
 
 
 @pytest.fixture
