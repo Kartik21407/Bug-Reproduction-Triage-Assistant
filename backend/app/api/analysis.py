@@ -38,6 +38,7 @@ from app.schemas.analysis import (
     EnvironmentReviewRequest,
     PersistedQuestion,
 )
+from app.triage.service import refresh_triage
 
 router = APIRouter(prefix="/reports", tags=["analysis"])
 
@@ -210,6 +211,8 @@ def answer_question(
     db.commit()
 
     extraction = _read_extraction(report)
+    refresh_triage(report, extraction)
+    db.commit()
     questions = _read_questions(report)
     return AnalysisRead(
         extraction=extraction,
@@ -280,6 +283,8 @@ def review_environment(
     db.commit()
 
     extraction = _read_extraction(report)
+    refresh_triage(report, extraction)
+    db.commit()
     questions = _read_questions(report)
     return AnalysisRead(
         extraction=extraction,
@@ -428,5 +433,6 @@ def _persist_analysis(
 
     report.title = extraction.title.value
     report.state = "Analysed"
+    refresh_triage(report, extraction)
 
     db.commit()
