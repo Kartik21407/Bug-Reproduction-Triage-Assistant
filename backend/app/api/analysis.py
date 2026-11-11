@@ -126,7 +126,7 @@ def read_analysis(report_id: UUID, current_user: CurrentUser, db: DbSession) -> 
     rules match every other report endpoint (NFR-15)."""
     report = get_owned_report_or_404(db, current_user, report_id)
 
-    extraction = _read_extraction(report)
+    extraction = read_extraction(report)
     questions = _read_questions(report)
     completeness = compute_completeness(extraction)
 
@@ -208,11 +208,12 @@ def answer_question(
             )
         )
 
+    # An answer can carry exactly the wording triage reads ("it crashes
+    # every time"), so the suggestions are refreshed with it.
+    refresh_triage(report, read_extraction(report))
     db.commit()
 
-    extraction = _read_extraction(report)
-    refresh_triage(report, extraction)
-    db.commit()
+    extraction = read_extraction(report)
     questions = _read_questions(report)
     return AnalysisRead(
         extraction=extraction,
@@ -280,11 +281,10 @@ def review_environment(
                 )
             )
 
+    refresh_triage(report, read_extraction(report))
     db.commit()
 
-    extraction = _read_extraction(report)
-    refresh_triage(report, extraction)
-    db.commit()
+    extraction = read_extraction(report)
     questions = _read_questions(report)
     return AnalysisRead(
         extraction=extraction,
@@ -294,9 +294,10 @@ def review_environment(
     )
 
 
-def _read_extraction(report: BugReport) -> ExtractionResult:
+def read_extraction(report: BugReport) -> ExtractionResult:
     """Rebuilds an `ExtractionResult` from this report's `extracted_fields`
-    and `environment_details` rows, the reverse of `_persist_analysis`."""
+    and `environment_details` rows, the reverse of `_persist_analysis`.
+    Shared with the triage and generated report routers."""
     rows_by_field: dict[str, list[ExtractedFieldRow]] = {}
     for row in report.extracted_fields:
         rows_by_field.setdefault(row.field_name, []).append(row)
@@ -329,6 +330,9 @@ def _read_extraction(report: BugReport) -> ExtractionResult:
         ],
         error_messages=ordered_list("error_messages"),
     )
+
+
+_read_extraction = read_extraction
 
 
 def _to_extracted_field_value(row: ExtractedFieldRow) -> ExtractedFieldValue:
@@ -433,6 +437,10 @@ def _persist_analysis(
 
     report.title = extraction.title.value
     report.state = "Analysed"
+
+    # Pipeline step 8 (docs/design.md section 6.5). A triage value a person
+    # already changed keeps their choice; only untouched values follow the
+    # new suggestion.
     refresh_triage(report, extraction)
 
     db.commit()
