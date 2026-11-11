@@ -1,9 +1,10 @@
+"""Collects the feature routers under a single /api prefix."""
+
 from fastapi import APIRouter
 
 from app.api import analysis, auth, duplicates, generated_report, reports, triage
 
 api_router = APIRouter(prefix="/api")
-
 api_router.include_router(auth.router)
 api_router.include_router(reports.router)
 api_router.include_router(analysis.router)
