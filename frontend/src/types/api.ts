@@ -1,6 +1,6 @@
 // TypeScript mirrors of the backend request and response shapes in
-// backend/app/schemas/core.py. Kept in step with that file: when one
-// changes, the other changes in the same pull request.
+// backend/app/schemas/. Kept in step with those files: when one changes,
+// the other changes in the same pull request.
 
 // --- Auth (US-01) ----------------------------------------------------------
 
@@ -177,3 +177,66 @@ export const FIELD_LABELS: Record<string, string> = {
   environment: 'Environment',
   error_messages: 'Error messages',
 };
+
+// --- Triage (Sprint 3: US-15, US-16, US-17) ---------------------------------
+// Mirrors backend/app/schemas/triage.py.
+
+export type TriageField = 'severity' | 'priority' | 'category' | 'reproducibility';
+
+export interface TriageValue {
+  value: string;
+  suggested_value: string;
+  reason: string;
+  overridden: boolean;
+  options: string[];
+}
+
+export type TriageRead = Record<TriageField, TriageValue>;
+
+export interface TriageOverrideRequest {
+  field: TriageField;
+  value: string;
+}
+
+// --- Duplicates (Sprint 3: US-20) --------------------------------------------
+// Mirrors backend/app/schemas/duplicates.py.
+
+export type DuplicateLabel = 'Likely duplicate' | 'Possible duplicate';
+
+export interface DuplicateCandidate {
+  id: string;
+  source: 'corpus' | 'report';
+  title: string;
+  url: string;
+  score: number;
+  label: DuplicateLabel;
+  rank: number;
+}
+
+export interface DuplicatesRead {
+  searched: boolean;
+  compared_count: number;
+  candidates: DuplicateCandidate[];
+}
+
+// --- Generated report (Sprint 3: US-23) ---------------------------------------
+// Mirrors backend/app/report/template.py.
+
+export interface ReportLine {
+  text: string;
+  label: Label | null;
+  note: string | null;
+  url: string | null;
+  preformatted: boolean;
+}
+
+export interface ReportSection {
+  key: string;
+  heading: string;
+  provided: boolean;
+  lines: ReportLine[];
+}
+
+export interface GeneratedReport {
+  sections: ReportSection[];
+}

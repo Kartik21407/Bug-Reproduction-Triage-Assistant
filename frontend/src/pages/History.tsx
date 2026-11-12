@@ -104,13 +104,10 @@ export default function History() {
         </div>
       </div>
 
-      {/* Severity and status are real columns and real filters, but every
-          report is Draft with no severity this sprint, since triage runs in
-          Sprint 3. The filters stay visible and usable rather than hidden,
-          and this line says why the results may look sparse. */}
+      {/* A report only gets a severity once it has been analysed, so the
+          filter can legitimately match nothing; this line says why. */}
       <p className="text-xs text-muted-foreground">
-        Severity is not assigned yet; that starts once triage is built. Every report is currently
-        Draft.
+        Severity is suggested when a report is analysed. Reports still in Draft have none yet.
       </p>
 
       {isLoading && <LoadingState label="Loading your reports…" />}
