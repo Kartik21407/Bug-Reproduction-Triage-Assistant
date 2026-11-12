@@ -6,6 +6,8 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { api } from '@/lib/api';
 import { reportKeys } from '@/hooks/useReports';
+import { triageKeys } from '@/hooks/useTriage';
+import { generatedReportKeys } from '@/hooks/useGeneratedReport';
 import type {
   AnalysisRead,
   AnalyzeRequest,
@@ -21,11 +23,14 @@ export const analysisKeys = {
 };
 
 // Invalidated after analyze, answer or environment review, since all three
-// can change the report's title or state as shown on ReportDetail and
-// History.
+// can change the report's title, state or severity as shown on ReportDetail
+// and History, and the server refreshes triage after each of them, which
+// the generated report shows too.
 function invalidateReport(queryClient: ReturnType<typeof useQueryClient>, reportId: string) {
   queryClient.invalidateQueries({ queryKey: reportKeys.detail(reportId) });
   queryClient.invalidateQueries({ queryKey: ['reports', 'list'] });
+  queryClient.invalidateQueries({ queryKey: triageKeys.read(reportId) });
+  queryClient.invalidateQueries({ queryKey: generatedReportKeys.read(reportId) });
 }
 
 export function useMaskPreview(reportId: string) {
