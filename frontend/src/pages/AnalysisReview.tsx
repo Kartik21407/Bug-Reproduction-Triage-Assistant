@@ -82,12 +82,20 @@ export default function AnalysisReview() {
             verified
           </p>
         </div>
-        <Link
-          to={`/reports/${reportId}/mask`}
-          className="shrink-0 rounded-md border px-3 py-2 text-sm font-medium"
-        >
-          Re-analyse
-        </Link>
+        <div className="flex shrink-0 gap-3">
+          <Link
+            to={`/reports/${reportId}/mask`}
+            className="rounded-md border px-3 py-2 text-sm font-medium"
+          >
+            Re-analyse
+          </Link>
+          <Link
+            to={`/reports/${reportId}/triage`}
+            className="rounded-md bg-primary px-3 py-2 text-sm font-medium text-primary-foreground"
+          >
+            Continue to triage
+          </Link>
+        </div>
       </div>
 
       <section className="flex flex-col gap-3">
