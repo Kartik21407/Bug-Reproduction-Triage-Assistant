@@ -107,6 +107,14 @@ export default function ReportDetail() {
               {report.state === 'Draft' ? 'Analyse' : 'View analysis'}
             </Link>
           )}
+          {!isEditing && report.state !== 'Draft' && (
+            <Link
+              to={`/reports/${report.id}/report`}
+              className="rounded-md border px-3 py-2 text-sm font-medium"
+            >
+              View report
+            </Link>
+          )}
           {!isEditing && (
             <button
               type="button"
