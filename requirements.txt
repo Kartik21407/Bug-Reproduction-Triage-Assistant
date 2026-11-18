@@ -45,6 +45,10 @@ fastembed==0.9.0
 # The pgvector column type and cosine distance for SQLAlchemy (ADR-003).
 pgvector==0.5.1
 
+# --- GitHub integration ---------------------------------------------------
+# Encrypts each user's GitHub token at rest (US-26 criterion 3), with Fernet.
+cryptography==50.0.2
+
 # --- Tests and code quality ---------------------------------------------
 pytest==9.1.1
 # Required by fastapi.testclient for the API tests.
