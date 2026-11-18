@@ -121,3 +121,47 @@ class DuplicateCandidate(Base):
     candidate_report: Mapped["BugReport | None"] = relationship(
         back_populates="cited_as_candidate", foreign_keys=[candidate_report_id]
     )
+
+
+class DuplicateDecision(Base):
+    """A person's decision that a candidate is, or is not, a duplicate of
+    their report (FR-18, US-21). Kept apart from `DuplicateCandidate`, which
+    a new search replaces, so a decision survives every later search and the
+    collected data is never lost (DR-05: only a person decides)."""
+
+    __tablename__ = "duplicate_decisions"
+    __table_args__ = (
+        CheckConstraint(
+            "(corpus_issue_id IS NULL) <> (candidate_report_id IS NULL)",
+            name="ck_duplicate_decisions_one_source",
+        ),
+        CheckConstraint(
+            "decision IN ('duplicate','not_duplicate')",
+            name="ck_duplicate_decisions_decision_valid",
+        ),
+    )
+
+    id: Mapped[uuid.UUID] = mapped_column(primary_key=True, default=uuid.uuid4)
+    report_id: Mapped[uuid.UUID] = mapped_column(
+        ForeignKey("bug_reports.id", ondelete="CASCADE"), nullable=False, index=True
+    )
+    corpus_issue_id: Mapped[uuid.UUID | None] = mapped_column(
+        ForeignKey("corpus_issues.id", ondelete="CASCADE"), nullable=True
+    )
+    candidate_report_id: Mapped[uuid.UUID | None] = mapped_column(
+        ForeignKey("bug_reports.id", ondelete="CASCADE"), nullable=True, index=True
+    )
+    decision: Mapped[str] = mapped_column(String(16), nullable=False)
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), server_default=func.now(), nullable=False
+    )
+    updated_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), server_default=func.now(), onupdate=func.now(), nullable=False
+    )
+
+    report: Mapped["BugReport"] = relationship(
+        back_populates="duplicate_decisions", foreign_keys=[report_id]
+    )
+    candidate_report: Mapped["BugReport | None"] = relationship(
+        back_populates="decided_as_candidate", foreign_keys=[candidate_report_id]
+    )

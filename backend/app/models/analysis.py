@@ -22,6 +22,7 @@ from sqlalchemy import (
     Integer,
     String,
     Text,
+    false,
     func,
 )
 from sqlalchemy.orm import Mapped, mapped_column, relationship
@@ -35,6 +36,10 @@ if TYPE_CHECKING:
 # a literal, not imported, since a database CHECK constraint cannot import a
 # Python enum; both are ADR-014's four labels, and both must change together.
 _LABEL_CONSTRAINT = "label IN ('Explicit','Inferred','Unverified','Missing')"
+# Who a row came from (ADR-011, ADR-027). A "user" row is a person's own
+# version of a field and always wins over the "model" row beside it;
+# re-analysis replaces only "model" rows.
+_SOURCE_CONSTRAINT = "source IN ('model','user')"
 
 
 class ExtractedField(Base):
@@ -44,7 +49,10 @@ class ExtractedField(Base):
     `position` (FR-27, FR-33)."""
 
     __tablename__ = "extracted_fields"
-    __table_args__ = (CheckConstraint(_LABEL_CONSTRAINT, name="ck_extracted_fields_label_valid"),)
+    __table_args__ = (
+        CheckConstraint(_LABEL_CONSTRAINT, name="ck_extracted_fields_label_valid"),
+        CheckConstraint(_SOURCE_CONSTRAINT, name="ck_extracted_fields_source_valid"),
+    )
 
     id: Mapped[uuid.UUID] = mapped_column(primary_key=True, default=uuid.uuid4)
     report_id: Mapped[uuid.UUID] = mapped_column(
@@ -60,6 +68,9 @@ class ExtractedField(Base):
     label: Mapped[str] = mapped_column(String(16), nullable=False)
     confidence: Mapped[float | None] = mapped_column(Float, nullable=True)
     reason: Mapped[str | None] = mapped_column(Text, nullable=True)
+    source: Mapped[str] = mapped_column(
+        String(8), nullable=False, default="model", server_default="model"
+    )
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), server_default=func.now(), nullable=False
     )
@@ -77,6 +88,7 @@ class EnvironmentDetail(Base):
     __tablename__ = "environment_details"
     __table_args__ = (
         CheckConstraint(_LABEL_CONSTRAINT, name="ck_environment_details_label_valid"),
+        CheckConstraint(_SOURCE_CONSTRAINT, name="ck_environment_details_source_valid"),
     )
 
     id: Mapped[uuid.UUID] = mapped_column(primary_key=True, default=uuid.uuid4)
@@ -87,6 +99,14 @@ class EnvironmentDetail(Base):
     value: Mapped[str] = mapped_column(Text, nullable=False)
     source_quote: Mapped[str] = mapped_column(Text, nullable=False)
     label: Mapped[str] = mapped_column(String(16), nullable=False)
+    source: Mapped[str] = mapped_column(
+        String(8), nullable=False, default="model", server_default="model"
+    )
+    # A "user" row with this set records that the person removed the detail
+    # of that name, so re-analysis cannot quietly bring it back (ADR-027).
+    removed: Mapped[bool] = mapped_column(
+        Boolean, nullable=False, default=False, server_default=false()
+    )
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), server_default=func.now(), nullable=False
     )

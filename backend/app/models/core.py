@@ -11,14 +11,25 @@ import uuid
 from datetime import datetime
 from typing import TYPE_CHECKING
 
-from sqlalchemy import CheckConstraint, DateTime, ForeignKey, String, Text, func
+from sqlalchemy import (
+    Boolean,
+    CheckConstraint,
+    DateTime,
+    ForeignKey,
+    Integer,
+    String,
+    Text,
+    false,
+    func,
+)
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.db import Base
 
 if TYPE_CHECKING:
     from app.models.analysis import EnvironmentDetail, ExtractedField, FollowUpQuestion
-    from app.models.corpus import DuplicateCandidate, ReportEmbedding
+    from app.models.corpus import DuplicateCandidate, DuplicateDecision, ReportEmbedding
+    from app.models.github import GitHubConnection
     from app.models.triage import TriageOverride, TriageValue
 
 
@@ -38,6 +49,10 @@ class User(Base):
 
     reports: Mapped[list["BugReport"]] = relationship(
         back_populates="user", cascade="all, delete-orphan"
+    )
+    # Sprint 4 (app/models/github.py), forward referenced.
+    github_connection: Mapped["GitHubConnection | None"] = relationship(
+        back_populates="user", cascade="all, delete-orphan", uselist=False
     )
 
 
@@ -72,6 +87,14 @@ class BugReport(Base):
     state: Mapped[str] = mapped_column(String(16), nullable=False, default="Draft")
     # Populated by triage from Sprint 3. Null until then.
     severity: Mapped[str | None] = mapped_column(String(8), nullable=True)
+    # Sprint 4: the issue this report was filed as (US-27 criterion 5).
+    github_issue_url: Mapped[str | None] = mapped_column(Text, nullable=True)
+    github_issue_number: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    # Set while an issue is being created, so a second Confirm cannot file a
+    # second issue (US-27 criterion 4). Claimed with a conditional UPDATE.
+    github_submitting: Mapped[bool] = mapped_column(
+        Boolean, nullable=False, default=False, server_default=false()
+    )
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), server_default=func.now(), nullable=False
     )
@@ -115,4 +138,16 @@ class BugReport(Base):
         back_populates="candidate_report",
         cascade="all, delete-orphan",
         foreign_keys="DuplicateCandidate.candidate_report_id",
+    )
+    # Sprint 4: a person's duplicate decisions about this report's
+    # candidates, and decisions elsewhere that name this report.
+    duplicate_decisions: Mapped[list["DuplicateDecision"]] = relationship(
+        back_populates="report",
+        cascade="all, delete-orphan",
+        foreign_keys="DuplicateDecision.report_id",
+    )
+    decided_as_candidate: Mapped[list["DuplicateDecision"]] = relationship(
+        back_populates="candidate_report",
+        cascade="all, delete-orphan",
+        foreign_keys="DuplicateDecision.candidate_report_id",
     )
