@@ -197,7 +197,3 @@ npm run test
 | **Shubham Mishra** | 202301100 |
 
 ---
-
-## 📄 Academic Integrity
-
-Developed for academic evaluation under the **IT314: Software Engineering** course at **Dhirubhai Ambani University**.
