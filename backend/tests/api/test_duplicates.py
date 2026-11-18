@@ -272,3 +272,99 @@ class TestReadAndAccess:
         client.delete(f"/api/reports/{earlier_id}")
 
         assert client.get(f"/api/reports/{report_id}/duplicates").json()["candidates"] == []
+
+
+class TestDecisions:
+    """US-21: each candidate has "Duplicate" and "Not duplicate", and the
+    choice is stored and shown on the report."""
+
+    def _searched(self, client, monkeypatch) -> tuple[str, dict]:
+        scores = {"Close match": 0.90, "Partial match": 0.70}
+        _use_scores(monkeypatch, scores)
+        _import_corpus(list(scores))
+        register_and_login(client)
+        report_id = create_report(client, REPORT_TEXT).json()["id"]
+        candidates = client.post(f"/api/reports/{report_id}/duplicates").json()["candidates"]
+        return report_id, candidates[0]
+
+    def test_a_decision_is_stored(self, client, monkeypatch):
+        """US-21 criteria 1 and 2."""
+        report_id, candidate = self._searched(client, monkeypatch)
+
+        response = client.put(
+            f"/api/reports/{report_id}/duplicates/{candidate['candidate_id']}/decision",
+            json={"decision": "duplicate"},
+        )
+
+        assert response.status_code == 200
+        assert response.json()["candidates"][0]["decision"] == "duplicate"
+        reread = client.get(f"/api/reports/{report_id}/duplicates").json()
+        assert reread["candidates"][0]["decision"] == "duplicate"
+        assert reread["candidates"][1]["decision"] is None
+
+    def test_the_decision_is_shown_on_the_report(self, client, monkeypatch):
+        """US-21 criterion 2."""
+        report_id, candidate = self._searched(client, monkeypatch)
+        client.put(
+            f"/api/reports/{report_id}/duplicates/{candidate['candidate_id']}/decision",
+            json={"decision": "not_duplicate"},
+        )
+
+        report = client.get(f"/api/reports/{report_id}/report").json()
+
+        duplicates = next(s for s in report["sections"] if s["key"] == "duplicates")
+        assert duplicates["lines"][0]["note"] == (
+            "Likely duplicate, similarity 0.90; you marked it not a duplicate"
+        )
+
+    def test_a_decision_survives_a_new_search(self, client, monkeypatch):
+        """Decisions are kept apart from the candidates a search replaces."""
+        report_id, candidate = self._searched(client, monkeypatch)
+        client.put(
+            f"/api/reports/{report_id}/duplicates/{candidate['candidate_id']}/decision",
+            json={"decision": "duplicate"},
+        )
+
+        searched = client.post(f"/api/reports/{report_id}/duplicates").json()
+
+        assert searched["candidates"][0]["candidate_id"] != candidate["candidate_id"]
+        assert searched["candidates"][0]["decision"] == "duplicate"
+
+    def test_a_decision_can_be_changed_and_taken_back(self, client, monkeypatch):
+        report_id, candidate = self._searched(client, monkeypatch)
+        url = f"/api/reports/{report_id}/duplicates/{candidate['candidate_id']}/decision"
+        client.put(url, json={"decision": "duplicate"})
+
+        changed = client.put(url, json={"decision": "not_duplicate"}).json()
+        taken_back = client.put(url, json={"decision": None}).json()
+
+        assert changed["candidates"][0]["decision"] == "not_duplicate"
+        assert taken_back["candidates"][0]["decision"] is None
+
+    def test_an_unknown_decision_or_candidate_is_rejected(self, client, monkeypatch):
+        report_id, candidate = self._searched(client, monkeypatch)
+
+        bad_value = client.put(
+            f"/api/reports/{report_id}/duplicates/{candidate['candidate_id']}/decision",
+            json={"decision": "maybe"},
+        )
+        unknown = client.put(
+            f"/api/reports/{report_id}/duplicates/00000000-0000-0000-0000-000000000000/decision",
+            json={"decision": "duplicate"},
+        )
+
+        assert bad_value.status_code == 422
+        assert unknown.status_code == 404
+
+    def test_another_users_report_cannot_be_decided_on(self, client, monkeypatch):
+        """NFR-15."""
+        report_id, candidate = self._searched(client, monkeypatch)
+        client.post("/api/auth/logout")
+        register_and_login(client, "other@example.com")
+
+        response = client.put(
+            f"/api/reports/{report_id}/duplicates/{candidate['candidate_id']}/decision",
+            json={"decision": "duplicate"},
+        )
+
+        assert response.status_code == 404

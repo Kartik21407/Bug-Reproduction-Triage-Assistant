@@ -35,10 +35,38 @@ class ReportSection(BaseModel):
     heading: str
     provided: bool
     lines: list[ReportLine]
+    # The fields this section is built from and can be edited through
+    # (US-24 criterion 1). Possible Duplicates has none: a person acts on
+    # it by confirming or rejecting a candidate instead (US-21).
+    fields: list[str] = []
+    # True when a person's own version is in force, so "Reset to suggested"
+    # has something to restore (US-24 criterion 3).
+    edited: bool = False
+
+
+class EnvironmentValue(BaseModel):
+    name: str
+    value: str
+
+
+class EditableValues(BaseModel):
+    """The current value of every editable field, for an editor to start
+    from."""
+
+    title: str | None
+    summary: str | None
+    expected_behaviour: str | None
+    actual_behaviour: str | None
+    frequency: str | None
+    additional_information: str | None
+    steps: list[str]
+    error_messages: list[str]
+    environment: list[EnvironmentValue]
 
 
 class GeneratedReport(BaseModel):
     sections: list[ReportSection]
+    values: EditableValues
 
 
 class TriageEntry(BaseModel):
@@ -53,6 +81,11 @@ class CandidateEntry(BaseModel):
     url: str
     score: float
     label: str
+    # "duplicate" or "not_duplicate" once a person decided (US-21).
+    decision: str | None = None
+    # One of the user's own earlier reports: its url is an in-app path, not
+    # a public address, so Markdown names it rather than linking it.
+    own_report: bool = False
 
 
 # US-23 criterion 1, in its order.
@@ -71,6 +104,28 @@ SECTIONS = (
     ("duplicates", "Possible Duplicates"),
     ("additional", "Additional Information"),
 )
+
+# Which editable fields each section is built from (US-24).
+SECTION_FIELDS: dict[str, list[str]] = {
+    "title": ["title"],
+    "summary": ["summary"],
+    "steps": ["steps"],
+    "expected": ["expected_behaviour"],
+    "actual": ["actual_behaviour"],
+    "environment": ["environment"],
+    "error_details": ["error_messages"],
+    "severity": ["severity"],
+    "priority": ["priority"],
+    "category": ["category"],
+    "reproducibility": ["reproducibility"],
+    "duplicates": [],
+    "additional": ["frequency", "additional_information"],
+}
+_TRIAGE_SECTIONS = ("severity", "priority", "category", "reproducibility")
+_DECISION_NOTES = {
+    "duplicate": "you marked it a duplicate",
+    "not_duplicate": "you marked it not a duplicate",
+}
 
 
 def _extracted(field: ExtractedField) -> list[ReportLine]:
@@ -97,10 +152,29 @@ def _duplicates(candidates: list[CandidateEntry] | None) -> list[ReportLine] | N
         return None
     if not candidates:
         return [ReportLine(text=NO_SIMILAR_ISSUES)]
-    return [
-        ReportLine(text=c.title, url=c.url, note=f"{c.label}, similarity {c.score:.2f}")
-        for c in candidates
-    ]
+    lines = []
+    for c in candidates:
+        note = f"{c.label}, similarity {c.score:.2f}"
+        if c.decision in _DECISION_NOTES:
+            note += f"; {_DECISION_NOTES[c.decision]}"
+        lines.append(ReportLine(text=c.title, url=c.url, note=note))
+    return lines
+
+
+def _values(extraction: ExtractionResult, note: str | None) -> EditableValues:
+    return EditableValues(
+        title=extraction.title.value,
+        summary=extraction.summary.value,
+        expected_behaviour=extraction.expected_behaviour.value,
+        actual_behaviour=extraction.actual_behaviour.value,
+        frequency=extraction.frequency.value,
+        additional_information=note,
+        steps=[s.value for s in extraction.steps if s.value],
+        error_messages=[e.value for e in extraction.error_messages if e.value],
+        environment=[
+            EnvironmentValue(name=d.name, value=d.value) for d in extraction.environment if d.value
+        ],
+    )
 
 
 def assemble_report(
@@ -108,11 +182,18 @@ def assemble_report(
     triage: dict[str, TriageEntry],
     candidates: list[CandidateEntry] | None,
     logs: str | None,
+    note: str | None = None,
+    edited_fields: set[str] | None = None,
 ) -> GeneratedReport:
-    """Every section of the template, in order, from what is known now."""
+    """Every section of the template, in order, from what is known now.
+    `note` is a person's own Additional Information text, and
+    `edited_fields` the fields they have their own version of."""
+    edited_fields = edited_fields or set()
     additional = _extracted(extraction.frequency)
     if additional:
         additional[0].text = f"Frequency: {additional[0].text}"
+    if note:
+        additional.append(ReportLine(text=note, label=Label.EXPLICIT))
     if logs:
         additional.append(ReportLine(text=logs, preformatted=True))
 
@@ -144,12 +225,19 @@ def assemble_report(
     for key, heading in SECTIONS:
         lines = content[key]
         provided = bool(lines)
+        if key in _TRIAGE_SECTIONS:
+            entry = triage.get(key)
+            edited = bool(entry and entry.overridden)
+        else:
+            edited = any(field in edited_fields for field in SECTION_FIELDS[key])
         sections.append(
             ReportSection(
                 key=key,
                 heading=heading,
                 provided=provided,
                 lines=lines if provided else [ReportLine(text=NOT_PROVIDED)],
+                fields=SECTION_FIELDS[key],
+                edited=edited,
             )
         )
-    return GeneratedReport(sections=sections)
+    return GeneratedReport(sections=sections, values=_values(extraction, note))

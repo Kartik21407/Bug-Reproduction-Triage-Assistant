@@ -38,7 +38,13 @@ def read_generated_report(
     duplicates = read_candidates(db, report)
     candidates = (
         [
-            CandidateEntry(title=c.title, url=c.url, score=c.score, label=c.label)
+            CandidateEntry(
+                title=c.title,
+                url=c.url,
+                score=c.score,
+                label=c.label,
+                decision=c.decision,
+            )
             for c in duplicates.candidates
         ]
         if duplicates.searched

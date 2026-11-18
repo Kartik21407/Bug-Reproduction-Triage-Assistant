@@ -5,19 +5,33 @@ from typing import Literal
 
 from pydantic import BaseModel
 
+Decision = Literal["duplicate", "not_duplicate"]
+
 
 class DuplicateCandidateRead(BaseModel):
-    """One candidate. `url` is the issue's own address for a corpus issue,
-    or the in-app path of the user's own earlier report. `label` is only
-    ever "Likely duplicate" or "Possible duplicate" (US-20 criterion 3)."""
+    """One candidate. `id` is the issue's or earlier report's id;
+    `candidate_id` is this candidate row's, the one a decision is posted
+    against. `url` is the issue's own address for a corpus issue, or the
+    in-app path of the user's own earlier report. `label` is only ever
+    "Likely duplicate" or "Possible duplicate" (US-20 criterion 3);
+    `decision` is a person's, never the system's (US-21, DR-05)."""
 
     id: str
+    candidate_id: str
     source: Literal["corpus", "report"]
     title: str
     url: str
     score: float
     label: str
     rank: int
+    decision: Decision | None = None
+
+
+class DuplicateDecisionRequest(BaseModel):
+    """A person's decision on one candidate (US-21 criterion 1). `null`
+    takes a decision back."""
+
+    decision: Decision | None
 
 
 class DuplicatesRead(BaseModel):
