@@ -59,6 +59,9 @@ class AnalysisRead(BaseModel):
     questions: list[PersistedQuestion]
     completeness: CompletenessScore
     steps_flagged_for_review: bool
+    # Fields a person has their own version of. Re-analysis keeps them
+    # (ADR-011), and the interface names them before analysis runs again.
+    corrected_fields: list[str] = []
 
 
 class AnalyzeRequest(BaseModel):

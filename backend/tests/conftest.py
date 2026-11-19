@@ -10,9 +10,13 @@ import os
 import re
 from collections.abc import Generator
 
+from cryptography.fernet import Fernet
+
 os.environ.setdefault("DATABASE_URL", "sqlite:///:memory:")
 os.environ.setdefault("JWT_SECRET_KEY", "test-secret-not-used-anywhere-else")
 os.environ.setdefault("SESSION_EXPIRE_MINUTES", "60")
+# A fresh key per test run, so no real key is ever written into the suite.
+os.environ.setdefault("TOKEN_ENCRYPTION_KEY", Fernet.generate_key().decode())
 
 import pytest
 from fastapi.testclient import TestClient
@@ -23,6 +27,7 @@ from sqlalchemy.pool import StaticPool
 from app.config import get_settings
 from app.corpus import embedding
 from app.db import Base, get_db
+from app.github import client as github_client
 from app.main import app
 from app.models.types import EMBEDDING_DIMENSIONS
 
@@ -80,6 +85,18 @@ def _no_real_embedding_model(monkeypatch: pytest.MonkeyPatch) -> None:
     """No test ever loads or downloads the real embedding model, the same
     rule that keeps every test away from a real Gemini call."""
     monkeypatch.setattr(embedding, "embed", fake_embed)
+
+
+@pytest.fixture(autouse=True)
+def _no_real_github(monkeypatch: pytest.MonkeyPatch) -> None:
+    """No test ever reaches GitHub. A test that needs a GitHub answer
+    replaces `app.github.client._send` itself; one that forgets fails here
+    instead of making a real call."""
+
+    def refuse(*args: object, **kwargs: object) -> None:
+        raise AssertionError("A test tried to call GitHub; fake app.github.client._send")
+
+    monkeypatch.setattr(github_client, "_send", refuse)
 
 
 @pytest.fixture
