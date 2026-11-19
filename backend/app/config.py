@@ -36,6 +36,12 @@ class Settings(BaseSettings):
     duplicate_likely_threshold: float = 0.80
     duplicate_possible_threshold: float = 0.60
 
+    # Encrypts every stored GitHub token (US-26 criterion 3). A Fernet key;
+    # empty means GitHub integration is switched off on this server. Losing
+    # or changing it makes stored tokens unreadable, so each user connects
+    # again; nothing else is affected.
+    token_encryption_key: str = ""
+
 
 @lru_cache
 def get_settings() -> Settings:

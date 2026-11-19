@@ -1,5 +1,6 @@
-"""Password hashing and session token creation and verification. The only
-module that touches argon2 or JWT directly."""
+"""Password hashing, session token creation and verification, and
+encryption of stored third-party secrets. The only module that touches
+argon2, JWT or the encryption library directly."""
 
 from datetime import UTC, datetime, timedelta
 from uuid import UUID
@@ -7,6 +8,7 @@ from uuid import UUID
 import jwt
 from argon2 import PasswordHasher
 from argon2.exceptions import VerifyMismatchError
+from cryptography.fernet import Fernet, InvalidToken
 
 from app.config import get_settings
 
@@ -52,3 +54,35 @@ def decode_session_token(token: str) -> UUID | None:
         return UUID(payload["sub"])
     except (jwt.PyJWTError, KeyError, ValueError):
         return None
+
+
+class SecretStoreUnavailableError(RuntimeError):
+    """No encryption key is configured, so no secret can be stored or read."""
+
+
+class SecretUnreadableError(RuntimeError):
+    """A stored secret cannot be decrypted, most likely because the key
+    changed since it was stored."""
+
+
+def _fernet() -> Fernet:
+    key = get_settings().token_encryption_key
+    if not key:
+        raise SecretStoreUnavailableError("TOKEN_ENCRYPTION_KEY is not set")
+    try:
+        return Fernet(key.encode())
+    except ValueError as error:
+        raise SecretStoreUnavailableError("TOKEN_ENCRYPTION_KEY is not a valid key") from error
+
+
+def encrypt_secret(secret: str) -> str:
+    """Ciphertext for a third-party secret such as a GitHub token, so it is
+    never stored in plain text (US-26 criterion 3)."""
+    return _fernet().encrypt(secret.encode()).decode()
+
+
+def decrypt_secret(ciphertext: str) -> str:
+    try:
+        return _fernet().decrypt(ciphertext.encode()).decode()
+    except InvalidToken as error:
+        raise SecretUnreadableError("The stored secret cannot be decrypted") from error

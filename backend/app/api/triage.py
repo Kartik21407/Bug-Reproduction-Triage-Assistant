@@ -6,10 +6,10 @@ from uuid import UUID
 from fastapi import APIRouter
 from sqlalchemy.orm import Session
 
-from app.api.analysis import _read_extraction as read_extraction
 from app.api.reports import get_owned_report_or_404
 from app.deps import CurrentUser, DbSession
 from app.models.core import BugReport
+from app.report.store import read_extraction
 from app.schemas.triage import TriageOverrideRequest, TriageRead, TriageValueRead
 from app.triage.rules import OPTIONS, TRIAGE_FIELDS
 from app.triage.service import apply_override, refresh_triage
