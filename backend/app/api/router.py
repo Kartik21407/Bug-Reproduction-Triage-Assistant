@@ -4,7 +4,6 @@ from fastapi import APIRouter
 
 from app.api import (
     analysis,
-    analytics,
     auth,
     duplicates,
     generated_report,
@@ -21,4 +20,3 @@ api_router.include_router(triage.router)
 api_router.include_router(duplicates.router)
 api_router.include_router(generated_report.router)
 api_router.include_router(github.router)
-api_router.include_router(analytics.router)
