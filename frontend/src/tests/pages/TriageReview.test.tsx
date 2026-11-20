@@ -284,7 +284,7 @@ describe('TriageReview', () => {
     ).toBeInTheDocument();
   });
 
-  it.skip('records a person confirming a candidate as a duplicate', async () => {
+  it('records a person confirming a candidate as a duplicate', async () => {
     // Arrange
     const calls: { path: string; body: unknown }[] = [];
     mockFetch({
@@ -322,7 +322,7 @@ describe('TriageReview', () => {
     ).toBeInTheDocument();
   });
 
-  it.skip('takes a decision back when the chosen button is clicked again', async () => {
+  it('takes a decision back when the chosen button is clicked again', async () => {
     // Arrange
     const decided: DuplicatesRead = {
       ...SEARCHED,

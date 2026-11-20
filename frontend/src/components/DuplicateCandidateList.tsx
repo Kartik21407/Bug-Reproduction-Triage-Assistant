@@ -1,19 +1,27 @@
 // The most similar existing issues for one report, most similar first
 // (US-20 criterion 1), each with its score and a Likely or Possible label
 // (criterion 2). The wording never says a report is a duplicate; only a
-// person can decide that (criterion 3, DR-05).
+// person can decide that (criterion 3, DR-05), with the "Duplicate" and
+// "Not duplicate" buttons on each candidate (US-21 criterion 1).
 
 import { Link } from 'react-router-dom';
-import type { DuplicateCandidate, DuplicateLabel } from '@/types/api';
+import type { DuplicateCandidate, DuplicateDecision, DuplicateLabel } from '@/types/api';
 
 const LABEL_STYLES: Record<DuplicateLabel, string> = {
   'Likely duplicate': 'bg-amber-100 text-amber-800',
   'Possible duplicate': 'bg-muted text-muted-foreground',
 };
 
+const DECISION_BUTTONS: { decision: DuplicateDecision; text: string }[] = [
+  { decision: 'duplicate', text: 'Duplicate' },
+  { decision: 'not_duplicate', text: 'Not duplicate' },
+];
+
 interface DuplicateCandidateListProps {
   candidates: DuplicateCandidate[];
   comparedCount: number;
+  isDeciding: boolean;
+  onDecide: (candidateId: string, decision: DuplicateDecision | null) => void;
 }
 
 function CandidateLink({ candidate }: { candidate: DuplicateCandidate }) {
@@ -36,7 +44,12 @@ function CandidateLink({ candidate }: { candidate: DuplicateCandidate }) {
   );
 }
 
-export function DuplicateCandidateList({ candidates, comparedCount }: DuplicateCandidateListProps) {
+export function DuplicateCandidateList({
+  candidates,
+  comparedCount,
+  isDeciding,
+  onDecide,
+}: DuplicateCandidateListProps) {
   if (comparedCount === 0) {
     return (
       <p className="text-sm text-muted-foreground">
@@ -59,7 +72,7 @@ export function DuplicateCandidateList({ candidates, comparedCount }: DuplicateC
         {candidates.map((candidate) => (
           <li
             key={`${candidate.source}-${candidate.id}`}
-            className="flex items-center justify-between gap-3 rounded-md border p-3"
+            className="flex flex-col gap-3 rounded-md border p-3 sm:flex-row sm:items-center sm:justify-between"
           >
             <div className="flex flex-col gap-1">
               <CandidateLink candidate={candidate} />
@@ -69,17 +82,37 @@ export function DuplicateCandidateList({ candidates, comparedCount }: DuplicateC
                 Similarity {candidate.score.toFixed(2)}
               </span>
             </div>
-            <span
-              className={`shrink-0 rounded-full px-2 py-0.5 text-xs font-medium ${LABEL_STYLES[candidate.label]}`}
-            >
-              {candidate.label}
-            </span>
+            <div className="flex shrink-0 flex-wrap items-center gap-2">
+              <span
+                className={`rounded-full px-2 py-0.5 text-xs font-medium ${LABEL_STYLES[candidate.label]}`}
+              >
+                {candidate.label}
+              </span>
+              {DECISION_BUTTONS.map(({ decision, text }) => {
+                const chosen = candidate.decision === decision;
+                return (
+                  <button
+                    key={decision}
+                    type="button"
+                    aria-pressed={chosen}
+                    aria-label={`${text}: ${candidate.title}`}
+                    disabled={isDeciding}
+                    onClick={() => onDecide(candidate.candidate_id, chosen ? null : decision)}
+                    className={`rounded-md border px-2 py-1 text-xs font-medium disabled:opacity-60 ${
+                      chosen ? 'bg-primary text-primary-foreground' : ''
+                    }`}
+                  >
+                    {text}
+                  </button>
+                );
+              })}
+            </div>
           </li>
         ))}
       </ol>
       <p className="text-xs text-muted-foreground">
         A similarity score is supporting evidence, not a decision. Only a person can confirm a
-        duplicate.
+        duplicate; click a chosen button again to take it back.
       </p>
     </div>
   );
