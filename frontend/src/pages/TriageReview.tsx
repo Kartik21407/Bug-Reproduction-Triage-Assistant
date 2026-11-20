@@ -1,11 +1,12 @@
-// Triage and duplicates (US-15, US-16, US-17, US-20): the suggested
+// Triage and duplicates (US-15, US-16, US-17, US-20, US-21): the suggested
 // severity, priority, category and reproducibility, each editable, and the
-// most similar existing issues.
+// most similar existing issues, each of which a person can mark as a
+// duplicate or not.
 
 import { Link, useParams } from 'react-router-dom';
 import { useReport } from '@/hooks/useReports';
 import { useOverrideTriage, useTriage } from '@/hooks/useTriage';
-import { useDuplicates, useFindDuplicates } from '@/hooks/useDuplicates';
+import { useDecideDuplicate, useDuplicates, useFindDuplicates } from '@/hooks/useDuplicates';
 import { ApiRequestError } from '@/lib/api';
 import { ErrorState, LoadingState } from '@/components/states';
 import { TriagePanel } from '@/components/TriagePanel';
@@ -25,6 +26,7 @@ export default function TriageReview() {
   const { data: duplicates, error: duplicatesError } = useDuplicates(reportId);
   const overrideTriage = useOverrideTriage(reportId);
   const findDuplicates = useFindDuplicates(reportId);
+  const decideDuplicate = useDecideDuplicate(reportId);
 
   if (isReportLoading) {
     return <LoadingState label="Loading triage…" />;
@@ -119,6 +121,7 @@ export default function TriageReview() {
           </button>
         </div>
         {duplicatesError && <ErrorState message="Could not load similar issues. Try again." />}
+        {decideDuplicate.error && <ErrorState message="Could not save that decision. Try again." />}
         {findDuplicates.error && (
           <ErrorState
             message={
@@ -138,6 +141,8 @@ export default function TriageReview() {
           <DuplicateCandidateList
             candidates={duplicates.candidates}
             comparedCount={duplicates.compared_count}
+            isDeciding={decideDuplicate.isPending}
+            onDecide={(candidateId, decision) => decideDuplicate.mutate({ candidateId, decision })}
           />
         )}
       </section>

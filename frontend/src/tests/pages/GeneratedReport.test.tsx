@@ -226,7 +226,7 @@ describe('GeneratedReport', () => {
     expect(await screen.findByText(/has not been analysed yet/)).toBeInTheDocument();
   });
 
-  it.skip('offers an edit button on every section a person can change', async () => {
+  it('offers an edit button on every section a person can change', async () => {
     // Arrange
     mockFetch();
 
@@ -244,7 +244,7 @@ describe('GeneratedReport', () => {
     ).not.toBeInTheDocument();
   });
 
-  it.skip('saves an edited section and shows the new value', async () => {
+  it('saves an edited section and shows the new value', async () => {
     // Arrange
     const afterChange = withSection(
       notProvidedReport(),
@@ -270,7 +270,7 @@ describe('GeneratedReport', () => {
     });
   });
 
-  it.skip('sends each step as its own item', async () => {
+  it('sends each step as its own item', async () => {
     // Arrange
     const calls = mockFetch();
     renderGeneratedReport();
@@ -294,7 +294,7 @@ describe('GeneratedReport', () => {
     );
   });
 
-  it.skip('asks for name: value lines in the environment editor', async () => {
+  it('asks for name: value lines in the environment editor', async () => {
     // Arrange
     const calls = mockFetch();
     renderGeneratedReport();
@@ -313,7 +313,7 @@ describe('GeneratedReport', () => {
     expect(calls).toEqual([]);
   });
 
-  it.skip('resets an edited section to the suggestion', async () => {
+  it('resets an edited section to the suggestion', async () => {
     // Arrange
     const generated = withSection(notProvidedReport(), 'Summary', [line('My own words')], true);
     const calls = mockFetch({ generated, afterChange: notProvidedReport() });
@@ -332,7 +332,7 @@ describe('GeneratedReport', () => {
     });
   });
 
-  it.skip('only offers a reset on a section that was edited', async () => {
+  it('only offers a reset on a section that was edited', async () => {
     // Arrange
     mockFetch();
 
@@ -344,7 +344,7 @@ describe('GeneratedReport', () => {
     expect(screen.queryByRole('button', { name: /to suggested$/ })).not.toBeInTheDocument();
   });
 
-  it.skip('copies the Markdown with one click and records the export', async () => {
+  it('copies the Markdown with one click and records the export', async () => {
     // Arrange
     const writeText = vi.fn().mockResolvedValue(undefined);
     const markdown = { markdown: '## Title\n\nLogin crash\n', warnings: [] };
@@ -370,7 +370,7 @@ describe('GeneratedReport', () => {
     );
   });
 
-  it.skip('shows the text to copy by hand when the browser blocks copying', async () => {
+  it('shows the text to copy by hand when the browser blocks copying', async () => {
     // Arrange
     const writeText = vi.fn().mockRejectedValue(new Error('blocked'));
     mockFetch({ markdown: { markdown: '## Title\n\nLogin crash\n', warnings: [] } });
@@ -389,7 +389,7 @@ describe('GeneratedReport', () => {
     );
   });
 
-  it.skip('warns about what is still missing before sharing', async () => {
+  it('warns about what is still missing before sharing', async () => {
     // Arrange
     mockFetch({
       markdown: {
@@ -406,7 +406,7 @@ describe('GeneratedReport', () => {
     expect(screen.getByText('Still missing: expected behaviour, frequency')).toBeInTheDocument();
   });
 
-  it.skip('marks an analysed report as reviewed', async () => {
+  it('marks an analysed report as reviewed', async () => {
     // Arrange
     const calls = mockFetch();
     renderGeneratedReport();
@@ -424,7 +424,7 @@ describe('GeneratedReport', () => {
     });
   });
 
-  it.skip('links on to filing the report on GitHub', async () => {
+  it('links on to filing the report on GitHub', async () => {
     // Arrange
     mockFetch();
 
