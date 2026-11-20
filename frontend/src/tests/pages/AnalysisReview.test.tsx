@@ -48,6 +48,7 @@ function makeAnalysis(overrides: Partial<AnalysisRead> = {}): AnalysisRead {
       needs_confirmation_fields: [],
     },
     steps_flagged_for_review: false,
+    corrected_fields: [],
     ...overrides,
   };
 }
