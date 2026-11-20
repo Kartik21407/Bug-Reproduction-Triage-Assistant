@@ -365,4 +365,3 @@ describe('TriageReview', () => {
     expect(await screen.findByText('Report not found.')).toBeInTheDocument();
   });
 });
-
