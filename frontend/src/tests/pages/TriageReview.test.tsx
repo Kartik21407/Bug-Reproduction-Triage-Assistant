@@ -61,21 +61,25 @@ const SEARCHED: DuplicatesRead = {
   candidates: [
     {
       id: 'c1',
+      candidate_id: 'cand-1',
       source: 'corpus',
       title: 'Login page crashes after a wrong password',
       url: 'https://github.com/acme/app/issues/7',
       score: 0.91,
       label: 'Likely duplicate',
       rank: 1,
+      decision: null,
     },
     {
       id: 'r2',
+      candidate_id: 'cand-2',
       source: 'report',
       title: 'Sign in closes the app',
       url: '/reports/r2',
       score: 0.66,
       label: 'Possible duplicate',
       rank: 2,
+      decision: null,
     },
   ],
 };
@@ -86,11 +90,15 @@ interface MockResponses {
   duplicates?: DuplicatesRead;
   onPatch?: (body: unknown) => TriageRead;
   onSearch?: () => DuplicatesRead;
+  onDecide?: (path: string, body: unknown) => DuplicatesRead;
 }
 
-function mockFetch({ report, triage, duplicates, onPatch, onSearch }: MockResponses) {
+function mockFetch({ report, triage, duplicates, onPatch, onSearch, onDecide }: MockResponses) {
   return vi.spyOn(globalThis, 'fetch').mockImplementation(async (url, init) => {
     const path = String(url);
+    if (path.endsWith('/decision') && init?.method === 'PUT') {
+      return jsonResponse(onDecide?.(path, JSON.parse(init.body as string)) ?? SEARCHED);
+    }
     if (path.endsWith('/triage') && init?.method === 'PATCH') {
       return jsonResponse(onPatch?.(JSON.parse(init.body as string)) ?? makeTriage());
     }
@@ -274,6 +282,74 @@ describe('TriageReview', () => {
     expect(
       await screen.findByText('Duplicate search is unavailable right now. Try again later.'),
     ).toBeInTheDocument();
+  });
+
+  it.skip('records a person confirming a candidate as a duplicate', async () => {
+    // Arrange
+    const calls: { path: string; body: unknown }[] = [];
+    mockFetch({
+      duplicates: SEARCHED,
+      onDecide: (path, body) => {
+        calls.push({ path, body });
+        return {
+          ...SEARCHED,
+          candidates: SEARCHED.candidates.map((candidate) =>
+            candidate.candidate_id === 'cand-1'
+              ? { ...candidate, decision: 'duplicate' }
+              : candidate,
+          ),
+        };
+      },
+    });
+    renderTriageReview();
+    const user = userEvent.setup();
+    const button = await screen.findByRole('button', {
+      name: 'Duplicate: Login page crashes after a wrong password',
+    });
+
+    // Act
+    await user.click(button);
+
+    // Assert: US-21 criterion 1
+    expect(calls).toEqual([
+      { path: '/api/reports/report-1/duplicates/cand-1/decision', body: { decision: 'duplicate' } },
+    ]);
+    expect(
+      await screen.findByRole('button', {
+        name: 'Duplicate: Login page crashes after a wrong password',
+        pressed: true,
+      }),
+    ).toBeInTheDocument();
+  });
+
+  it.skip('takes a decision back when the chosen button is clicked again', async () => {
+    // Arrange
+    const decided: DuplicatesRead = {
+      ...SEARCHED,
+      candidates: SEARCHED.candidates.map((candidate) =>
+        candidate.candidate_id === 'cand-2'
+          ? { ...candidate, decision: 'not_duplicate' }
+          : candidate,
+      ),
+    };
+    const bodies: unknown[] = [];
+    mockFetch({
+      duplicates: decided,
+      onDecide: (_path, body) => {
+        bodies.push(body);
+        return SEARCHED;
+      },
+    });
+    renderTriageReview();
+    const user = userEvent.setup();
+
+    // Act
+    await user.click(
+      await screen.findByRole('button', { name: 'Not duplicate: Sign in closes the app' }),
+    );
+
+    // Assert
+    expect(bodies).toEqual([{ decision: null }]);
   });
 
   it('shows a not-found message for a 404', async () => {

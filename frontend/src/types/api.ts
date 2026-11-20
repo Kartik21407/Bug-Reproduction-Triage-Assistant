@@ -134,6 +134,8 @@ export interface AnalysisRead {
   questions: FollowUpQuestion[];
   completeness: CompletenessScore;
   steps_flagged_for_review: boolean;
+  // Fields a person has their own version of; re-analysis keeps them.
+  corrected_fields: string[];
 }
 
 export interface AnalyzeRequest {
@@ -203,14 +205,19 @@ export interface TriageOverrideRequest {
 
 export type DuplicateLabel = 'Likely duplicate' | 'Possible duplicate';
 
+export type DuplicateDecision = 'duplicate' | 'not_duplicate';
+
 export interface DuplicateCandidate {
   id: string;
+  // This candidate row's id, the one a decision is posted against.
+  candidate_id: string;
   source: 'corpus' | 'report';
   title: string;
   url: string;
   score: number;
   label: DuplicateLabel;
   rank: number;
+  decision: DuplicateDecision | null;
 }
 
 export interface DuplicatesRead {
@@ -235,8 +242,112 @@ export interface ReportSection {
   heading: string;
   provided: boolean;
   lines: ReportLine[];
+  // The fields this section is built from and edited through (US-24).
+  fields: string[];
+  // A person's own version is in force, so it can be reset.
+  edited: boolean;
+}
+
+export interface EnvironmentValue {
+  name: string;
+  value: string;
+}
+
+export interface EditableValues {
+  title: string | null;
+  summary: string | null;
+  expected_behaviour: string | null;
+  actual_behaviour: string | null;
+  frequency: string | null;
+  additional_information: string | null;
+  steps: string[];
+  error_messages: string[];
+  environment: EnvironmentValue[];
 }
 
 export interface GeneratedReport {
   sections: ReportSection[];
+  values: EditableValues;
+}
+
+// --- Report editing and export (Sprint 4: US-24, US-25) ----------------------
+// Mirrors backend/app/schemas/report.py.
+
+export type EditableField =
+  | 'title'
+  | 'summary'
+  | 'expected_behaviour'
+  | 'actual_behaviour'
+  | 'frequency'
+  | 'steps'
+  | 'error_messages'
+  | 'environment'
+  | 'additional_information';
+
+export interface ReportEditRequest {
+  field: EditableField;
+  text?: string | null;
+  items?: string[];
+  environment?: EnvironmentValue[];
+}
+
+export interface MarkdownRead {
+  markdown: string;
+  warnings: string[];
+}
+
+// --- GitHub (Sprint 4: US-26, US-27) -----------------------------------------
+// Mirrors backend/app/schemas/github.py. No shape here can carry the token.
+
+export interface GitHubConnection {
+  connected: boolean;
+  login: string | null;
+  repository: string | null;
+}
+
+export interface GitHubRepository {
+  full_name: string;
+  private: boolean;
+}
+
+export interface LikelyDuplicate {
+  title: string;
+  url: string;
+  score: number;
+}
+
+export interface IssuePreview {
+  repository: string | null;
+  title: string;
+  body: string;
+  labels: string[];
+  likely_duplicates: LikelyDuplicate[];
+  warnings: string[];
+  issue_url: string | null;
+}
+
+export interface IssueCreated {
+  issue_url: string;
+  issue_number: number | null;
+  created: boolean;
+}
+
+// --- Analytics (Sprint 4: US-29) ---------------------------------------------
+// Mirrors backend/app/schemas/analytics.py.
+
+export interface NamedCount {
+  name: string;
+  count: number;
+}
+
+export interface WeekCount {
+  week_start: string;
+  count: number;
+}
+
+export interface AnalyticsRead {
+  total_reports: number;
+  by_severity: NamedCount[];
+  by_category: NamedCount[];
+  by_week: WeekCount[];
 }
