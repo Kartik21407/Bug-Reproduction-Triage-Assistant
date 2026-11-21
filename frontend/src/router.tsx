@@ -12,6 +12,9 @@ import MaskingReview from '@/pages/MaskingReview';
 import AnalysisReview from '@/pages/AnalysisReview';
 import TriageReview from '@/pages/TriageReview';
 import GeneratedReport from '@/pages/GeneratedReport';
+import GitHubIssue from '@/pages/GitHubIssue';
+import GitHubSettings from '@/pages/GitHubSettings';
+import Analytics from '@/pages/Analytics';
 import { ProtectedRoute } from '@/components/layout/ProtectedRoute';
 import { useLogout } from '@/hooks/useAuth';
 
@@ -31,6 +34,12 @@ function SignedInPlaceholder() {
         </Link>
         <Link to="/reports" className="text-sm font-medium underline">
           History
+        </Link>
+        <Link to="/analytics" className="text-sm font-medium underline">
+          Analytics
+        </Link>
+        <Link to="/settings/github" className="text-sm font-medium underline">
+          GitHub settings
         </Link>
       </div>
       <button
@@ -58,6 +67,9 @@ export function AppRouter() {
         <Route path="/reports/:id/analysis" element={<AnalysisReview />} />
         <Route path="/reports/:id/triage" element={<TriageReview />} />
         <Route path="/reports/:id/report" element={<GeneratedReport />} />
+        <Route path="/reports/:id/github" element={<GitHubIssue />} />
+        <Route path="/settings/github" element={<GitHubSettings />} />
+        <Route path="/analytics" element={<Analytics />} />
       </Route>
       <Route path="*" element={<Navigate to="/login" replace />} />
     </Routes>
