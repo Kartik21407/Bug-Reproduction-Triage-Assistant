@@ -21,6 +21,7 @@ from sqlalchemy import (
     Text,
     false,
     func,
+    true,
 )
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
@@ -40,6 +41,15 @@ class User(Base):
     email: Mapped[str] = mapped_column(String(320), unique=True, index=True, nullable=False)
     # Salted argon2 hash. Never a plaintext password (NFR-03).
     password_hash: Mapped[str] = mapped_column(String(255), nullable=False)
+    # Sprint 5 (US-03, US-31). An administrator is made by the operator
+    # command `python -m app.admin`, never through the API. A deactivated
+    # account keeps every report; it only cannot sign in (US-03).
+    is_admin: Mapped[bool] = mapped_column(
+        Boolean, nullable=False, default=False, server_default=false()
+    )
+    is_active: Mapped[bool] = mapped_column(
+        Boolean, nullable=False, default=True, server_default=true()
+    )
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), server_default=func.now(), nullable=False
     )
