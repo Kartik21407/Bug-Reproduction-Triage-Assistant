@@ -1,5 +1,6 @@
-"""Lists a report's duplicate candidates, runs a fresh search (US-20,
-FR-17), and records a person's decision on a candidate (US-21, FR-18)."""
+"""Lists a report's duplicate candidates with why each was considered
+similar (US-20, US-22, FR-17), runs a fresh search, and records a person's
+decision on a candidate (US-21, FR-18)."""
 
 from uuid import UUID
 
@@ -8,6 +9,7 @@ from sqlalchemy.orm import Session
 
 from app.api.reports import get_owned_report_or_404
 from app.corpus.embedding import EmbeddingUnavailableError
+from app.corpus.explain import explain
 from app.corpus.search import compared_count, find_duplicates
 from app.deps import CurrentUser, DbSession
 from app.models.core import BugReport
@@ -98,9 +100,16 @@ def _decision_for(report: BugReport, candidate: DuplicateCandidate) -> Duplicate
     )
 
 
+def _report_text(report: BugReport) -> str:
+    parts = [report.title or "", report.original_text, report.logs or ""]
+    return "\n".join(part for part in parts if part)
+
+
 def read_candidates(db: Session, report: BugReport) -> DuplicatesRead:
-    """Shared with the generated report and GitHub routers."""
+    """Shared with the generated report and GitHub routers. Each candidate
+    carries why it was considered similar (US-22)."""
     candidates = []
+    report_text = _report_text(report)
     for row in report.duplicate_candidates:
         decision = _decision_for(report, row)
         common = {
@@ -111,12 +120,14 @@ def read_candidates(db: Session, report: BugReport) -> DuplicatesRead:
             "decision": decision.decision if decision else None,
         }
         if row.corpus_issue is not None:
+            issue = row.corpus_issue
             candidates.append(
                 DuplicateCandidateRead(
-                    id=str(row.corpus_issue.id),
+                    id=str(issue.id),
                     source="corpus",
-                    title=row.corpus_issue.title,
-                    url=row.corpus_issue.url,
+                    title=issue.title,
+                    url=issue.url,
+                    explanation=explain(report_text, f"{issue.title}\n{issue.body}"),
                     **common,
                 )
             )
@@ -128,6 +139,7 @@ def read_candidates(db: Session, report: BugReport) -> DuplicatesRead:
                     source="report",
                     title=other.title or other.original_text[:80],
                     url=f"/reports/{other.id}",
+                    explanation=explain(report_text, _report_text(other)),
                     **common,
                 )
             )
