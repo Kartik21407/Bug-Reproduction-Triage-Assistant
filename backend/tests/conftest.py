@@ -17,6 +17,8 @@ os.environ.setdefault("JWT_SECRET_KEY", "test-secret-not-used-anywhere-else")
 os.environ.setdefault("SESSION_EXPIRE_MINUTES", "60")
 # A fresh key per test run, so no real key is ever written into the suite.
 os.environ.setdefault("TOKEN_ENCRYPTION_KEY", Fernet.generate_key().decode())
+# No background corpus import while tests run; tests call it directly.
+os.environ["CORPUS_SYNC_INTERVAL_MINUTES"] = "0"
 
 import pytest
 from fastapi.testclient import TestClient

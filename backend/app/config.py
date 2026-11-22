@@ -42,6 +42,17 @@ class Settings(BaseSettings):
     # again; nothing else is affected.
     token_encryption_key: str = ""
 
+    # US-28: the repository whose open issues are kept in the corpus
+    # automatically, as owner/name. Empty means no automatic import until an
+    # administrator sets one on the admin page, which then takes precedence.
+    corpus_sync_repository: str = ""
+    # How often the automatic import runs, in minutes. 0 switches the
+    # background schedule off; an administrator can still run it by hand.
+    corpus_sync_interval_minutes: int = 60
+    # Optional GitHub token for the import, raising the rate limit from 60 to
+    # 5,000 requests an hour. Read only; never stored or logged.
+    corpus_sync_token: str = ""
+
 
 @lru_cache
 def get_settings() -> Settings:

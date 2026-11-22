@@ -12,6 +12,7 @@ import json
 import urllib.error
 import urllib.parse
 import urllib.request
+from datetime import UTC, datetime, timedelta
 from typing import Any
 
 _API = "https://api.github.com"
@@ -20,6 +21,16 @@ _PAGE_SIZE = 100
 
 class GitHubFetchError(RuntimeError):
     pass
+
+
+class GitHubRateLimitError(GitHubFetchError):
+    """GitHub refused a page because of its rate limit. `reset_at` is when
+    it says the limit lifts, when it said; the page can be asked for again
+    then (US-28 criterion 2)."""
+
+    def __init__(self, message: str, reset_at: datetime | None = None) -> None:
+        super().__init__(message)
+        self.reset_at = reset_at
 
 
 def issue_to_row(repository: str, issue: dict[str, Any]) -> dict[str, str] | None:
@@ -75,6 +86,20 @@ def next_page_url(link_header: str | None) -> str | None:
     return None
 
 
+def _reset_time(headers: Any) -> datetime | None:
+    """When GitHub says the rate limit lifts: `x-ratelimit-reset` (epoch
+    seconds) or `retry-after` (seconds from now)."""
+    if headers is None:
+        return None
+    reset = headers.get("x-ratelimit-reset")
+    if reset and reset.isdigit():
+        return datetime.fromtimestamp(int(reset), tz=UTC)
+    retry = headers.get("retry-after")
+    if retry and retry.isdigit():
+        return datetime.now(UTC) + timedelta(seconds=int(retry))
+    return None
+
+
 def _get_page(url: str, token: str | None) -> tuple[list[dict[str, Any]], str | None]:
     """One page of issues and the address of the next page."""
     headers = {
@@ -89,9 +114,10 @@ def _get_page(url: str, token: str | None) -> tuple[list[dict[str, Any]], str | 
             return json.load(response), next_page_url(response.headers.get("Link"))
     except urllib.error.HTTPError as error:
         if error.code in (403, 429):
-            raise GitHubFetchError(
+            raise GitHubRateLimitError(
                 "GitHub refused the request, most likely its rate limit. Wait an hour or pass "
-                "--token with a personal access token."
+                "--token with a personal access token.",
+                reset_at=_reset_time(error.headers),
             ) from error
         if error.code == 404:
             raise GitHubFetchError(f"Repository not found: {url}") from error
