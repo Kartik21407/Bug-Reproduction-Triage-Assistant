@@ -31,6 +31,7 @@ class UserRead(BaseModel):
 
     id: UUID
     email: str
+    is_admin: bool = False
     created_at: datetime
 
 
