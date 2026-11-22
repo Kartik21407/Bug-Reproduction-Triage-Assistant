@@ -17,6 +17,7 @@ export interface UserLogin {
 export interface UserRead {
   id: string;
   email: string;
+  is_admin: boolean;
   created_at: string;
 }
 
@@ -218,6 +219,18 @@ export interface DuplicateCandidate {
   label: DuplicateLabel;
   rank: number;
   decision: DuplicateDecision | null;
+  // Why it was considered similar (US-22); evidence, never part of the score.
+  explanation: SimilarityExplanation | null;
+}
+
+export interface MatchingField {
+  field: string;
+  value: string;
+}
+
+export interface SimilarityExplanation {
+  shared_terms: string[];
+  matching_fields: MatchingField[];
 }
 
 export interface DuplicatesRead {
@@ -350,4 +363,66 @@ export interface AnalyticsRead {
   by_severity: NamedCount[];
   by_category: NamedCount[];
   by_week: WeekCount[];
+}
+
+// --- Sprint 5: US-18, US-30, and the administrator endpoints (US-03,
+// US-28, US-31). Mirrors backend/app/schemas/triage.py, analytics.py and
+// admin.py.
+
+export interface TriageChange {
+  field: TriageField;
+  old_value: string;
+  new_value: string;
+  changed_by: string;
+  changed_at: string;
+}
+
+export interface MissingFieldCount {
+  field: string;
+  name: string;
+  count: number;
+}
+
+export interface MissingFieldsRead {
+  analysed_reports: number;
+  fields: MissingFieldCount[];
+}
+
+export interface AdminUser {
+  id: string;
+  email: string;
+  is_admin: boolean;
+  is_active: boolean;
+  report_count: number;
+  created_at: string;
+}
+
+export interface DuplicateThresholds {
+  likely: number;
+  possible: number;
+  default_likely: number;
+  default_possible: number;
+  customised: boolean;
+}
+
+export type CorpusSyncStatus = 'idle' | 'running' | 'paused' | 'complete' | 'failed';
+
+export interface CorpusSyncState {
+  repository: string;
+  status: CorpusSyncStatus;
+  pages_done: number;
+  imported: number;
+  updated: number;
+  skipped: number;
+  message: string | null;
+  resume_after: string | null;
+  started_at: string | null;
+  finished_at: string | null;
+}
+
+export interface CorpusSyncRead {
+  repository: string | null;
+  interval_minutes: number;
+  running: boolean;
+  state: CorpusSyncState | null;
 }

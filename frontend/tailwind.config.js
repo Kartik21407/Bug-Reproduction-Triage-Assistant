@@ -12,9 +12,14 @@ export default {
         ring: 'hsl(var(--ring))',
         background: 'hsl(var(--background))',
         foreground: 'hsl(var(--foreground))',
+        card: 'hsl(var(--card))',
         primary: {
           DEFAULT: 'hsl(var(--primary))',
           foreground: 'hsl(var(--primary-foreground))',
+        },
+        accent: {
+          DEFAULT: 'hsl(var(--accent))',
+          foreground: 'hsl(var(--accent-foreground))',
         },
         muted: {
           DEFAULT: 'hsl(var(--muted))',
@@ -28,6 +33,9 @@ export default {
       fontFamily: {
         // Logs are shown unmodified in a monospace font (US-05 criterion 2).
         mono: ['ui-monospace', 'SFMono-Regular', 'Menlo', 'Consolas', 'monospace'],
+      },
+      boxShadow: {
+        soft: '0 2px 12px rgba(0, 0, 0, 0.06)',
       },
     },
   },

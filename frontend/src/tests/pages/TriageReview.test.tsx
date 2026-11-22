@@ -69,6 +69,7 @@ const SEARCHED: DuplicatesRead = {
       label: 'Likely duplicate',
       rank: 1,
       decision: null,
+      explanation: null,
     },
     {
       id: 'r2',
@@ -80,6 +81,7 @@ const SEARCHED: DuplicatesRead = {
       label: 'Possible duplicate',
       rank: 2,
       decision: null,
+      explanation: null,
     },
   ],
 };

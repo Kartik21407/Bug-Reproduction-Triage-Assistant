@@ -1,5 +1,82 @@
-/* Tailwind layers and the CSS variables that shadcn/ui primitives read.
-   Keep the variable names in step with tailwind.config.js. */
+/* Tailwind layers, the colour variables every page reads, and a few shared
+   component classes. Keep the variable names in step with
+   tailwind.config.js. The palette is warm cream with a burnt-orange
+   accent. */
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+@layer base {
+  :root {
+    --background: 27 43% 96%;
+    --foreground: 18 17% 12%;
+    --card: 30 50% 99%;
+    --primary: 21 73% 44%;
+    --primary-foreground: 0 0% 100%;
+    --accent: 22 82% 93%;
+    --accent-foreground: 21 73% 36%;
+    --muted: 26 22% 93%;
+    --muted-foreground: 20 7% 41%;
+    --border: 26 25% 89%;
+    --input: 26 22% 86%;
+    --ring: 21 73% 44%;
+    --destructive: 0 68% 45%;
+    --destructive-foreground: 0 0% 100%;
+  }
+
+  * {
+    @apply border-border;
+  }
+
+  html {
+    -webkit-font-smoothing: antialiased;
+  }
+
+  body {
+    @apply min-h-screen bg-background font-sans text-foreground;
+    background-image: linear-gradient(135deg, hsl(30 50% 98%) 0%, hsl(24 45% 93%) 100%);
+    background-attachment: fixed;
+  }
+
+  input:not([type='checkbox']):not([type='radio']),
+  textarea,
+  select {
+    @apply border-input bg-white transition-colors;
+  }
+
+  input:not([type='checkbox']):not([type='radio']):focus,
+  textarea:focus,
+  select:focus {
+    @apply border-primary outline-none ring-2 ring-primary/20;
+  }
+
+  input[type='checkbox'] {
+    accent-color: hsl(var(--primary));
+  }
+
+  h1 {
+    @apply tracking-tight;
+  }
+}
+
+@layer components {
+  .card {
+    @apply rounded-2xl border bg-card shadow-soft;
+  }
+
+  .btn-primary {
+    @apply inline-flex items-center justify-center gap-2 rounded-lg bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground shadow-sm transition hover:bg-primary/90 disabled:cursor-not-allowed disabled:opacity-60;
+  }
+
+  .btn-secondary {
+    @apply inline-flex items-center justify-center gap-2 rounded-lg border bg-card px-4 py-2 text-sm font-medium transition hover:bg-muted disabled:cursor-not-allowed disabled:opacity-60;
+  }
+
+  .field {
+    @apply w-full rounded-lg border px-3.5 py-2.5 text-sm placeholder:text-muted-foreground/70;
+  }
+
+  .eyebrow {
+    @apply text-xs font-semibold uppercase tracking-wide text-muted-foreground;
+  }
+}
