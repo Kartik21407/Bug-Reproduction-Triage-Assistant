@@ -22,8 +22,8 @@ from pgvector.sqlalchemy import Vector
 from sqlalchemy import Float, literal, select
 from sqlalchemy.orm import Session
 
-from app.config import get_settings
-from app.corpus import embedding
+from app.corpus import embedding, thresholds
+from app.corpus.thresholds import Thresholds
 from app.models.core import BugReport
 from app.models.corpus import CorpusIssue, DuplicateCandidate, ReportEmbedding
 from app.models.types import EMBEDDING_DIMENSIONS
@@ -40,14 +40,16 @@ class _Scored:
     score: float
 
 
-def label_for(score: float) -> str | None:
-    """US-20 criterion 2: 0.80 or above is Likely, 0.60 up to 0.80 is
-    Possible, anything lower is hidden (None). The two numbers come from
-    settings and are starting estimates (ADR-018)."""
-    settings = get_settings()
-    if score >= settings.duplicate_likely_threshold:
+def label_for(score: float, limits: Thresholds | None = None) -> str | None:
+    """US-20 criterion 2: at or above the likely threshold is Likely, at or
+    above the possible threshold is Possible, anything lower is hidden
+    (None). The thresholds start at 0.80 and 0.60 and an administrator can
+    change them (US-31); without `limits`, the environment's defaults
+    apply."""
+    limits = limits or thresholds.defaults()
+    if score >= limits.likely:
         return LIKELY_DUPLICATE
-    if score >= settings.duplicate_possible_threshold:
+    if score >= limits.possible:
         return POSSIBLE_DUPLICATE
     return None
 
@@ -70,8 +72,8 @@ def find_duplicates(db: Session, report: BugReport) -> None:
     db.flush()
 
     scored = _score_candidates(db, report, vector)
-    threshold = get_settings().duplicate_possible_threshold
-    shown = sorted((s for s in scored if s.score >= threshold), key=lambda s: -s.score)
+    limits = thresholds.current_thresholds(db)
+    shown = sorted((s for s in scored if s.score >= limits.possible), key=lambda s: -s.score)
     shown = shown[:MAX_CANDIDATES]
 
     report.duplicate_candidates.clear()
@@ -83,7 +85,7 @@ def find_duplicates(db: Session, report: BugReport) -> None:
                 candidate_report_id=candidate.id if candidate.source == "report" else None,
                 rank=rank,
                 score=candidate.score,
-                label=label_for(candidate.score),
+                label=label_for(candidate.score, limits),
             )
         )
     db.commit()
