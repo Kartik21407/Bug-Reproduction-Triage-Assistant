@@ -54,6 +54,13 @@ def login(body: UserLogin, response: Response, db: DbSession) -> User:
     user = db.execute(select(User).where(User.email == email)).scalar_one_or_none()
     if user is None or not verify_password(body.password, user.password_hash):
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail=generic_error)
+    # Checked only after the password, so this message reveals nothing to
+    # someone who does not already know it (US-03 criterion 1).
+    if not user.is_active:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="This account has been deactivated. Contact an administrator.",
+        )
 
     token = create_session_token(user.id)
     _set_session_cookie(response, token)
