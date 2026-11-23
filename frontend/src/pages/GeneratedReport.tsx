@@ -33,7 +33,7 @@ const TRIAGE_KEYS: string[] = ['severity', 'priority', 'category', 'reproducibil
 function LineContent({ line }: { line: ReportLine }) {
   if (line.preformatted) {
     return (
-      <pre className="overflow-x-auto whitespace-pre-wrap rounded-md border p-3 font-mono text-xs">
+      <pre className="overflow-x-auto whitespace-pre-wrap rounded-lg border bg-white p-3 font-mono text-xs">
         {line.text}
       </pre>
     );
@@ -138,10 +138,7 @@ export default function GeneratedReport() {
         <p className="text-sm text-muted-foreground">
           This report has not been analysed yet, so there is nothing to put in the template.
         </p>
-        <Link
-          to={`/reports/${reportId}/mask`}
-          className="self-start rounded-md bg-primary px-3 py-2 text-sm font-medium text-primary-foreground"
-        >
+        <Link to={`/reports/${reportId}/mask`} className="self-start btn-primary px-3 py-2 text-sm">
           Review and analyse
         </Link>
       </div>
@@ -203,10 +200,7 @@ export default function GeneratedReport() {
           <p className="text-sm text-muted-foreground">Status: {report.state}</p>
         </div>
         <div className="flex flex-wrap gap-2">
-          <Link
-            to={`/reports/${reportId}/triage`}
-            className="rounded-md border px-3 py-2 text-sm font-medium"
-          >
+          <Link to={`/reports/${reportId}/triage`} className="btn-secondary px-3 py-2 text-sm">
             Back to triage
           </Link>
           {canMarkReviewed && (
@@ -214,7 +208,7 @@ export default function GeneratedReport() {
               type="button"
               onClick={() => markReviewed.mutate()}
               disabled={markReviewed.isPending}
-              className="rounded-md border px-3 py-2 text-sm font-medium disabled:opacity-60"
+              className="btn-secondary px-3 py-2 text-sm"
             >
               Mark as reviewed
             </button>
@@ -223,21 +217,18 @@ export default function GeneratedReport() {
             type="button"
             onClick={copyMarkdown}
             disabled={!markdown}
-            className="rounded-md border px-3 py-2 text-sm font-medium disabled:opacity-60"
+            className="btn-secondary px-3 py-2 text-sm"
           >
             {copyState === 'copied' ? 'Copied' : 'Copy as Markdown'}
           </button>
-          <Link
-            to={`/reports/${reportId}/github`}
-            className="rounded-md bg-primary px-3 py-2 text-sm font-medium text-primary-foreground"
-          >
+          <Link to={`/reports/${reportId}/github`} className="btn-primary px-3 py-2 text-sm">
             File on GitHub
           </Link>
         </div>
       </div>
 
       {markdown && markdown.warnings.length > 0 && (
-        <div className="rounded-md border border-amber-400 bg-amber-50 p-3 text-sm text-amber-900">
+        <div className="rounded-xl border border-amber-400 bg-amber-50 p-3 text-sm text-amber-900">
           <p className="font-medium">Before you share this report</p>
           <ul className="list-disc pl-5">
             {markdown.warnings.map((warning) => (
@@ -257,14 +248,14 @@ export default function GeneratedReport() {
             readOnly
             value={markdown.markdown}
             rows={10}
-            className="rounded-md border p-3 font-mono text-xs"
+            className="rounded-lg border bg-white p-3 font-mono text-xs"
           />
         </div>
       )}
 
       {saveError && <ErrorState message="Could not save that change. Try again." />}
 
-      <article className="flex flex-col gap-4 rounded-md border p-4">
+      <article className="flex flex-col gap-4 rounded-xl border bg-card p-4">
         {generated.sections.map((section) => (
           <section key={section.key} className="flex flex-col gap-2 border-b pb-4 last:border-b-0">
             <div className="flex items-center justify-between gap-2">

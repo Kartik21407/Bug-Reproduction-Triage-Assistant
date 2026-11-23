@@ -49,14 +49,14 @@ export default function GitHubIssue() {
         <h1 className="text-xl font-semibold">File on GitHub</h1>
         <Link
           to={`/reports/${reportId}/report`}
-          className="shrink-0 rounded-md border px-3 py-2 text-sm font-medium"
+          className="shrink-0 btn-secondary px-3 py-2 text-sm"
         >
           Back to report
         </Link>
       </div>
 
       {filedUrl && (
-        <p className="rounded-md border border-green-400 bg-green-50 p-3 text-sm text-green-900">
+        <p className="rounded-xl border border-green-400 bg-green-50 p-3 text-sm text-green-900">
           Filed as{' '}
           <a href={filedUrl} target="_blank" rel="noreferrer" className="font-medium underline">
             {filedUrl}
@@ -75,7 +75,7 @@ export default function GitHubIssue() {
       )}
 
       {preview.warnings.length > 0 && (
-        <div className="rounded-md border border-amber-400 bg-amber-50 p-3 text-sm text-amber-900">
+        <div className="rounded-xl border border-amber-400 bg-amber-50 p-3 text-sm text-amber-900">
           <p className="font-medium">This report is incomplete</p>
           <ul className="list-disc pl-5">
             {preview.warnings.map((warning) => (
@@ -85,7 +85,10 @@ export default function GitHubIssue() {
         </div>
       )}
 
-      <section aria-label="Issue preview" className="flex flex-col gap-3 rounded-md border p-4">
+      <section
+        aria-label="Issue preview"
+        className="flex flex-col gap-3 rounded-xl border bg-card p-4"
+      >
         <div className="flex flex-col gap-0.5">
           <span className="text-xs font-medium text-muted-foreground">Repository</span>
           <span className="text-sm">{preview.repository ?? 'None chosen'}</span>
@@ -100,14 +103,14 @@ export default function GitHubIssue() {
         </div>
         <div className="flex flex-col gap-0.5">
           <span className="text-xs font-medium text-muted-foreground">Body (Markdown)</span>
-          <pre className="max-h-96 overflow-auto whitespace-pre-wrap rounded-md border p-3 font-mono text-xs">
+          <pre className="max-h-96 overflow-auto whitespace-pre-wrap rounded-lg border bg-white p-3 font-mono text-xs">
             {preview.body}
           </pre>
         </div>
       </section>
 
       {needsAcknowledgement && !filedUrl && (
-        <div className="flex flex-col gap-2 rounded-md border border-amber-400 p-3">
+        <div className="flex flex-col gap-2 rounded-xl border border-amber-400 bg-card p-3">
           <p className="text-sm font-medium">This report has likely duplicates</p>
           <ul className="list-disc pl-5 text-sm">
             {preview.likely_duplicates.map((duplicate) => (
@@ -154,7 +157,7 @@ export default function GitHubIssue() {
           type="button"
           onClick={() => createIssue.mutate(acknowledged)}
           disabled={!canConfirm}
-          className="self-start rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground disabled:opacity-60"
+          className="self-start btn-primary px-4 py-2 text-sm"
         >
           {createIssue.isPending ? 'Filing…' : 'Confirm and file'}
         </button>

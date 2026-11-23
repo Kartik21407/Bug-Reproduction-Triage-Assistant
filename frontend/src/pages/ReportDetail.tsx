@@ -102,16 +102,13 @@ export default function ReportDetail() {
                   ? `/reports/${report.id}/mask`
                   : `/reports/${report.id}/analysis`
               }
-              className="rounded-md border px-3 py-2 text-sm font-medium"
+              className="btn-secondary px-3 py-2 text-sm"
             >
               {report.state === 'Draft' ? 'Analyse' : 'View analysis'}
             </Link>
           )}
           {!isEditing && report.state !== 'Draft' && (
-            <Link
-              to={`/reports/${report.id}/report`}
-              className="rounded-md border px-3 py-2 text-sm font-medium"
-            >
+            <Link to={`/reports/${report.id}/report`} className="btn-secondary px-3 py-2 text-sm">
               View report
             </Link>
           )}
@@ -119,7 +116,7 @@ export default function ReportDetail() {
             <button
               type="button"
               onClick={() => setIsEditing(true)}
-              className="rounded-md border px-3 py-2 text-sm font-medium"
+              className="btn-secondary px-3 py-2 text-sm"
             >
               Edit
             </button>
@@ -128,7 +125,7 @@ export default function ReportDetail() {
             type="button"
             onClick={handleDelete}
             disabled={deleteReport.isPending}
-            className="rounded-md border border-destructive px-3 py-2 text-sm font-medium text-destructive disabled:opacity-60"
+            className="btn-secondary border-destructive px-3 py-2 text-sm text-destructive"
           >
             Delete
           </button>
@@ -153,7 +150,7 @@ export default function ReportDetail() {
             <button
               type="submit"
               disabled={updateReport.isPending}
-              className="rounded-md bg-primary px-3 py-2 text-sm font-medium text-primary-foreground disabled:opacity-60"
+              className="btn-primary px-3 py-2 text-sm"
             >
               {updateReport.isPending ? 'Saving…' : 'Save'}
             </button>
@@ -163,7 +160,7 @@ export default function ReportDetail() {
                 reset({ original_text: report.original_text, logs: report.logs ?? '' });
                 setIsEditing(false);
               }}
-              className="rounded-md border px-3 py-2 text-sm font-medium"
+              className="btn-secondary px-3 py-2 text-sm"
             >
               Cancel
             </button>
@@ -173,7 +170,7 @@ export default function ReportDetail() {
         <div className="flex flex-col gap-4">
           <div className="flex flex-col gap-1">
             <span className="text-sm font-medium">Bug description</span>
-            <p className="whitespace-pre-wrap rounded-md border p-3 text-sm">
+            <p className="whitespace-pre-wrap rounded-lg border bg-white p-3 text-sm">
               {report.original_text}
             </p>
           </div>
@@ -181,7 +178,7 @@ export default function ReportDetail() {
           {report.logs && (
             <div className="flex flex-col gap-1">
               <span className="text-sm font-medium">Logs</span>
-              <pre className="overflow-x-auto whitespace-pre-wrap rounded-md border p-3 font-mono text-xs">
+              <pre className="overflow-x-auto whitespace-pre-wrap rounded-lg border bg-white p-3 font-mono text-xs">
                 {report.logs}
               </pre>
             </div>

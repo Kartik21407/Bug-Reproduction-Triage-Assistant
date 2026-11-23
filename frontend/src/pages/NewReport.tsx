@@ -79,15 +79,11 @@ export default function NewReport() {
           <button
             type="submit"
             disabled={createReport.isPending}
-            className="rounded-md bg-primary px-3 py-2 text-sm font-medium text-primary-foreground disabled:opacity-60"
+            className="btn-primary px-3 py-2 text-sm"
           >
             {createReport.isPending ? 'Submitting…' : 'Submit'}
           </button>
-          <button
-            type="button"
-            onClick={handleClear}
-            className="rounded-md border px-3 py-2 text-sm font-medium"
-          >
+          <button type="button" onClick={handleClear} className="btn-secondary px-3 py-2 text-sm">
             Clear
           </button>
         </div>

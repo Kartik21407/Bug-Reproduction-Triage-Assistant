@@ -7,12 +7,21 @@ import { Link, useNavigate } from 'react-router-dom';
 import { useRegister } from '@/hooks/useAuth';
 import { ApiRequestError } from '@/lib/api';
 import { ErrorState } from '@/components/states';
+import { AuthLayout } from '@/components/layout/AuthLayout';
+import { PasswordInput } from '@/components/PasswordInput';
 
-// Mirrors backend/app/schemas/core.py UserCreate (US-01 criterion 1).
-const registerSchema = z.object({
-  email: z.string().email('Enter a valid email address'),
-  password: z.string().min(8, 'Password must be at least 8 characters'),
-});
+// Mirrors backend/app/schemas/core.py UserCreate (US-01 criterion 1). The
+// confirmation only guards against a typo; it is never sent.
+const registerSchema = z
+  .object({
+    email: z.string().email('Enter a valid email address'),
+    password: z.string().min(8, 'Password must be at least 8 characters'),
+    confirmPassword: z.string(),
+  })
+  .refine((values) => values.password === values.confirmPassword, {
+    message: 'The two passwords do not match',
+    path: ['confirmPassword'],
+  });
 
 type RegisterValues = z.infer<typeof registerSchema>;
 
@@ -26,10 +35,13 @@ export default function Register() {
     formState: { errors },
   } = useForm<RegisterValues>({ resolver: zodResolver(registerSchema) });
 
-  const onSubmit = handleSubmit((values) => {
-    registerUser.mutate(values, {
-      onSuccess: () => navigate('/login', { replace: true, state: { justRegistered: true } }),
-    });
+  const onSubmit = handleSubmit(({ email, password }) => {
+    registerUser.mutate(
+      { email, password },
+      {
+        onSuccess: () => navigate('/login', { replace: true, state: { justRegistered: true } }),
+      },
+    );
   });
 
   const serverError =
@@ -40,16 +52,19 @@ export default function Register() {
         : null;
 
   return (
-    <div className="mx-auto flex min-h-screen max-w-sm flex-col justify-center gap-6 p-6">
-      <div>
-        <h1 className="text-xl font-semibold">Create an account</h1>
-        <p className="text-sm text-muted-foreground">Bug Reproduction &amp; Triage Assistant</p>
-      </div>
+    <AuthLayout
+      title="Create your account"
+      subtitle="Get started with BugTriage for free"
+      active="signup"
+    >
+      {serverError && (
+        <div className="mb-4">
+          <ErrorState message={serverError} />
+        </div>
+      )}
 
-      {serverError && <ErrorState message={serverError} />}
-
-      <form onSubmit={onSubmit} noValidate className="flex flex-col gap-4">
-        <div className="flex flex-col gap-1">
+      <form onSubmit={onSubmit} noValidate className="flex flex-col gap-5">
+        <div className="flex flex-col gap-1.5">
           <label htmlFor="email" className="text-sm font-medium">
             Email
           </label>
@@ -57,9 +72,10 @@ export default function Register() {
             id="email"
             type="email"
             autoComplete="email"
+            placeholder="you@example.com"
             aria-invalid={Boolean(errors.email)}
             aria-describedby={errors.email ? 'email-error' : undefined}
-            className="rounded-md border px-3 py-2 text-sm"
+            className="field"
             {...register('email')}
           />
           {errors.email && (
@@ -69,17 +85,15 @@ export default function Register() {
           )}
         </div>
 
-        <div className="flex flex-col gap-1">
+        <div className="flex flex-col gap-1.5">
           <label htmlFor="password" className="text-sm font-medium">
             Password
           </label>
-          <input
+          <PasswordInput
             id="password"
-            type="password"
             autoComplete="new-password"
             aria-invalid={Boolean(errors.password)}
             aria-describedby={errors.password ? 'password-error' : undefined}
-            className="rounded-md border px-3 py-2 text-sm"
             {...register('password')}
           />
           {errors.password && (
@@ -89,21 +103,40 @@ export default function Register() {
           )}
         </div>
 
-        <button
-          type="submit"
-          disabled={registerUser.isPending}
-          className="rounded-md bg-primary px-3 py-2 text-sm font-medium text-primary-foreground disabled:opacity-60"
-        >
+        <div className="flex flex-col gap-1.5">
+          <label htmlFor="confirm-password" className="text-sm font-medium">
+            Confirm Password
+          </label>
+          <PasswordInput
+            id="confirm-password"
+            autoComplete="new-password"
+            aria-invalid={Boolean(errors.confirmPassword)}
+            aria-describedby={errors.confirmPassword ? 'confirm-password-error' : undefined}
+            {...register('confirmPassword')}
+          />
+          {errors.confirmPassword && (
+            <p id="confirm-password-error" className="text-sm text-destructive">
+              {errors.confirmPassword.message}
+            </p>
+          )}
+        </div>
+
+        <button type="submit" disabled={registerUser.isPending} className="btn-primary py-2.5">
           {registerUser.isPending ? 'Creating account…' : 'Create account'}
         </button>
       </form>
 
-      <p className="text-sm text-muted-foreground">
+      <div className="my-5 flex items-center gap-3 text-xs text-muted-foreground">
+        <span className="h-px flex-1 bg-border" />
+        or
+        <span className="h-px flex-1 bg-border" />
+      </div>
+      <p className="text-center text-sm text-muted-foreground">
         Already have an account?{' '}
-        <Link to="/login" className="font-medium underline">
+        <Link to="/login" className="font-medium text-primary hover:underline">
           Sign in
         </Link>
       </p>
-    </div>
+    </AuthLayout>
   );
 }

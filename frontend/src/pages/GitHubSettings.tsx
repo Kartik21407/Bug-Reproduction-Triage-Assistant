@@ -54,7 +54,7 @@ export default function GitHubSettings() {
       <section className="flex flex-col gap-3">
         <h2 className="text-sm font-semibold uppercase text-muted-foreground">Token</h2>
         {connection.connected ? (
-          <div className="flex flex-wrap items-center justify-between gap-3 rounded-md border p-3">
+          <div className="flex flex-wrap items-center justify-between gap-3 rounded-xl border bg-card p-3">
             <p className="text-sm">
               Connected as <span className="font-medium">{connection.login}</span>
             </p>
@@ -62,7 +62,7 @@ export default function GitHubSettings() {
               type="button"
               onClick={() => disconnect.mutate()}
               disabled={disconnect.isPending}
-              className="rounded-md border px-3 py-1.5 text-xs font-medium disabled:opacity-60"
+              className="btn-secondary px-3 py-1.5 text-xs"
             >
               Disconnect
             </button>
@@ -81,7 +81,7 @@ export default function GitHubSettings() {
             autoComplete="off"
             value={token}
             onChange={(event) => setToken(event.target.value)}
-            className="rounded-md border px-3 py-2 text-sm"
+            className="rounded-lg border px-3 py-2 text-sm"
           />
           <p className="text-xs text-muted-foreground">
             Create one on GitHub under Settings, Developer settings, Fine-grained tokens. Give it
@@ -94,7 +94,7 @@ export default function GitHubSettings() {
           <button
             type="submit"
             disabled={connect.isPending || !token.trim()}
-            className="self-start rounded-md bg-primary px-3 py-2 text-sm font-medium text-primary-foreground disabled:opacity-60"
+            className="self-start btn-primary px-3 py-2 text-sm"
           >
             {connect.isPending ? 'Checking…' : 'Connect'}
           </button>
@@ -131,7 +131,7 @@ export default function GitHubSettings() {
                   id="github-repository"
                   value={chosen || connection.repository || ''}
                   onChange={(event) => setChosen(event.target.value)}
-                  className="rounded-md border px-3 py-2 text-sm"
+                  className="rounded-lg border px-3 py-2 text-sm"
                 >
                   <option value="" disabled>
                     Choose a repository
@@ -148,7 +148,7 @@ export default function GitHubSettings() {
                 type="button"
                 onClick={() => chosen && choose.mutate(chosen)}
                 disabled={!chosen || choose.isPending}
-                className="rounded-md border px-3 py-2 text-sm font-medium disabled:opacity-60"
+                className="btn-secondary px-3 py-2 text-sm"
               >
                 Save
               </button>

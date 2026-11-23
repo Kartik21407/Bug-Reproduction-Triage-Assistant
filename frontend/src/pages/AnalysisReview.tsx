@@ -62,10 +62,7 @@ export default function AnalysisReview() {
       <div className="mx-auto flex max-w-3xl flex-col gap-4 p-6">
         <h1 className="text-xl font-semibold">Analysis</h1>
         <p className="text-sm text-muted-foreground">This report has not been analysed yet.</p>
-        <Link
-          to={`/reports/${reportId}/mask`}
-          className="self-start rounded-md bg-primary px-3 py-2 text-sm font-medium text-primary-foreground"
-        >
+        <Link to={`/reports/${reportId}/mask`} className="self-start btn-primary px-3 py-2 text-sm">
           Review and analyse
         </Link>
       </div>
@@ -83,16 +80,10 @@ export default function AnalysisReview() {
           </p>
         </div>
         <div className="flex shrink-0 gap-3">
-          <Link
-            to={`/reports/${reportId}/mask`}
-            className="rounded-md border px-3 py-2 text-sm font-medium"
-          >
+          <Link to={`/reports/${reportId}/mask`} className="btn-secondary px-3 py-2 text-sm">
             Re-analyse
           </Link>
-          <Link
-            to={`/reports/${reportId}/triage`}
-            className="rounded-md bg-primary px-3 py-2 text-sm font-medium text-primary-foreground"
-          >
+          <Link to={`/reports/${reportId}/triage`} className="btn-primary px-3 py-2 text-sm">
             Continue to triage
           </Link>
         </div>
@@ -142,7 +133,7 @@ export default function AnalysisReview() {
           <div className="flex flex-col gap-2">
             <span className="text-sm font-medium">Reproduction steps</span>
             {stepsFlagged && (
-              <p className="rounded-md border border-amber-400 bg-amber-50 p-2 text-xs text-amber-800">
+              <p className="rounded-xl border border-amber-400 bg-amber-50 p-2 text-xs text-amber-800">
                 More than seven steps were extracted. Review the full list before filing; nothing
                 has been shortened.
               </p>

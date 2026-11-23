@@ -1,14 +1,33 @@
 // Masking review (US-32): previews what would be masked, lets the user
 // restore a false positive or mask something by hand, then runs analysis
 // with those adjustments. Only the masked copy is ever sent anywhere; the
-// original stays visible to the owner on ReportDetail (criterion 5).
+// original stays visible to the owner on ReportDetail (criterion 5). When
+// the report has been corrected by hand, it says those corrections survive
+// a re-run (ADR-011).
 
 import { useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { useMaskPreview, useAnalyzeReport } from '@/hooks/useAnalysis';
+import { useAnalysisRead, useAnalyzeReport, useMaskPreview } from '@/hooks/useAnalysis';
 import { ApiRequestError } from '@/lib/api';
 import { ErrorState, LoadingState } from '@/components/states';
 import { MaskedItemList } from '@/components/MaskedItemList';
+
+const FIELD_NAMES: Record<string, string> = {
+  title: 'the title',
+  summary: 'the summary',
+  steps: 'the steps to reproduce',
+  expected_behaviour: 'the expected behaviour',
+  actual_behaviour: 'the actual behaviour',
+  error_messages: 'the error messages',
+  environment: 'the environment',
+  frequency: 'the frequency',
+  additional_information: 'the additional information',
+};
+
+function joinNames(names: string[]): string {
+  if (names.length <= 1) return names.join('');
+  return `${names.slice(0, -1).join(', ')} and ${names[names.length - 1]}`;
+}
 
 export default function MaskingReview() {
   const { id } = useParams<{ id: string }>();
@@ -20,6 +39,10 @@ export default function MaskingReview() {
 
   const { data: preview, isLoading, error } = useMaskPreview(reportId);
   const analyzeReport = useAnalyzeReport(reportId);
+  // Only an analysed report has corrections; for a draft this read fails
+  // and the notice simply does not show.
+  const { data: analysis } = useAnalysisRead(reportId);
+  const corrected = (analysis?.corrected_fields ?? []).map((field) => FIELD_NAMES[field] ?? field);
 
   if (isLoading) {
     return <LoadingState label="Checking for secrets…" />;
@@ -65,6 +88,13 @@ export default function MaskingReview() {
         </p>
       </div>
 
+      {corrected.length > 0 && (
+        <p className="rounded-xl border bg-card p-3 text-sm">
+          Running analysis again keeps your corrections to {joinNames(corrected)}. Everything else
+          is suggested again from the text.
+        </p>
+      )}
+
       {analyzeError && <ErrorState message={analyzeError} />}
 
       <MaskedItemList
@@ -79,7 +109,7 @@ export default function MaskingReview() {
 
       <div className="flex flex-col gap-1">
         <span className="text-sm font-medium">Masked preview</span>
-        <pre className="overflow-x-auto whitespace-pre-wrap rounded-md border p-3 font-mono text-xs">
+        <pre className="overflow-x-auto whitespace-pre-wrap rounded-lg border bg-white p-3 font-mono text-xs">
           {preview.masked_text}
         </pre>
       </div>
@@ -88,7 +118,7 @@ export default function MaskingReview() {
         type="button"
         onClick={handleRunAnalysis}
         disabled={analyzeReport.isPending}
-        className="self-start rounded-md bg-primary px-3 py-2 text-sm font-medium text-primary-foreground disabled:opacity-60"
+        className="self-start btn-primary px-3 py-2 text-sm"
       >
         {analyzeReport.isPending ? 'Analysing…' : 'Run analysis'}
       </button>

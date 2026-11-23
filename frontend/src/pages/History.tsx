@@ -61,7 +61,7 @@ export default function History() {
             placeholder="Search title or description"
             value={searchInput}
             onChange={(event) => setSearchInput(event.target.value)}
-            className="rounded-md border px-3 py-2 text-sm"
+            className="rounded-lg border px-3 py-2 text-sm"
           />
         </div>
 
@@ -73,7 +73,7 @@ export default function History() {
             id="severity"
             value={severity}
             onChange={(event) => setSeverity(event.target.value as Severity | '')}
-            className="rounded-md border px-3 py-2 text-sm"
+            className="rounded-lg border px-3 py-2 text-sm"
           >
             <option value="">All</option>
             {SEVERITIES.map((value) => (
@@ -92,7 +92,7 @@ export default function History() {
             id="state"
             value={state}
             onChange={(event) => setState(event.target.value as ReportState | '')}
-            className="rounded-md border px-3 py-2 text-sm"
+            className="rounded-lg border px-3 py-2 text-sm"
           >
             <option value="">All</option>
             {STATES.map((value) => (
@@ -118,10 +118,7 @@ export default function History() {
           title="No reports yet"
           description="Submit your first bug report to see it here."
           action={
-            <Link
-              to="/reports/new"
-              className="rounded-md bg-primary px-3 py-2 text-sm font-medium text-primary-foreground"
-            >
+            <Link to="/reports/new" className="btn-primary px-3 py-2 text-sm">
               Submit a report
             </Link>
           }

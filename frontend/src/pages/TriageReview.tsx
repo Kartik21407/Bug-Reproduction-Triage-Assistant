@@ -1,16 +1,18 @@
-// Triage and duplicates (US-15, US-16, US-17, US-20, US-21): the suggested
-// severity, priority, category and reproducibility, each editable, and the
-// most similar existing issues, each of which a person can mark as a
-// duplicate or not.
+// Triage and duplicates (US-15 to US-18, US-20 to US-22): the suggested
+// severity, priority, category and reproducibility, each editable, with a
+// log of every change; and the most similar existing issues, each saying
+// why it looks similar, each of which a person can mark as a duplicate or
+// not.
 
 import { Link, useParams } from 'react-router-dom';
 import { useReport } from '@/hooks/useReports';
-import { useOverrideTriage, useTriage } from '@/hooks/useTriage';
+import { useOverrideTriage, useTriage, useTriageHistory } from '@/hooks/useTriage';
 import { useDecideDuplicate, useDuplicates, useFindDuplicates } from '@/hooks/useDuplicates';
 import { ApiRequestError } from '@/lib/api';
 import { ErrorState, LoadingState } from '@/components/states';
 import { TriagePanel } from '@/components/TriagePanel';
 import { DuplicateCandidateList } from '@/components/DuplicateCandidateList';
+import { TriageChangeLog } from '@/components/TriageChangeLog';
 
 export default function TriageReview() {
   const { id } = useParams<{ id: string }>();
@@ -23,6 +25,7 @@ export default function TriageReview() {
     isLoading: isTriageLoading,
     error: triageError,
   } = useTriage(reportId, { enabled: isAnalysed });
+  const history = useTriageHistory(reportId, { enabled: isAnalysed });
   const { data: duplicates, error: duplicatesError } = useDuplicates(reportId);
   const overrideTriage = useOverrideTriage(reportId);
   const findDuplicates = useFindDuplicates(reportId);
@@ -55,10 +58,7 @@ export default function TriageReview() {
         <p className="text-sm text-muted-foreground">
           This report has not been analysed yet. Triage is suggested from the analysed report.
         </p>
-        <Link
-          to={`/reports/${reportId}/mask`}
-          className="self-start rounded-md bg-primary px-3 py-2 text-sm font-medium text-primary-foreground"
-        >
+        <Link to={`/reports/${reportId}/mask`} className="self-start btn-primary px-3 py-2 text-sm">
           Review and analyse
         </Link>
       </div>
@@ -73,16 +73,10 @@ export default function TriageReview() {
           <p className="text-sm text-muted-foreground">Triage and similar issues</p>
         </div>
         <div className="flex shrink-0 gap-3">
-          <Link
-            to={`/reports/${reportId}/analysis`}
-            className="rounded-md border px-3 py-2 text-sm font-medium"
-          >
+          <Link to={`/reports/${reportId}/analysis`} className="btn-secondary px-3 py-2 text-sm">
             Back to analysis
           </Link>
-          <Link
-            to={`/reports/${reportId}/report`}
-            className="rounded-md bg-primary px-3 py-2 text-sm font-medium text-primary-foreground"
-          >
+          <Link to={`/reports/${reportId}/report`} className="btn-primary px-3 py-2 text-sm">
             View report
           </Link>
         </div>
@@ -102,6 +96,17 @@ export default function TriageReview() {
         )}
       </section>
 
+      <section aria-labelledby="change-log-heading" className="flex flex-col gap-3">
+        <h2
+          id="change-log-heading"
+          className="text-sm font-semibold uppercase text-muted-foreground"
+        >
+          Change log
+        </h2>
+        {history.error && <ErrorState message="Could not load the change log. Try again." />}
+        {history.data && <TriageChangeLog changes={history.data} />}
+      </section>
+
       <section className="flex flex-col gap-3">
         <div className="flex items-center justify-between gap-3">
           <h2 className="text-sm font-semibold uppercase text-muted-foreground">
@@ -111,7 +116,7 @@ export default function TriageReview() {
             type="button"
             onClick={() => findDuplicates.mutate()}
             disabled={findDuplicates.isPending}
-            className="shrink-0 rounded-md border px-3 py-2 text-sm font-medium disabled:opacity-60"
+            className="shrink-0 btn-secondary px-3 py-2 text-sm"
           >
             {findDuplicates.isPending
               ? 'Searching…'
