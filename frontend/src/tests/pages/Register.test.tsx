@@ -51,6 +51,7 @@ describe('Register', () => {
     // Act
     await user.type(screen.getByLabelText('Email'), 'taken@example.com');
     await user.type(screen.getByLabelText('Password'), 'correct-horse-battery-staple');
+    await user.type(screen.getByLabelText('Confirm Password'), 'correct-horse-battery-staple');
     await user.click(screen.getByRole('button', { name: 'Create account' }));
 
     // Assert
@@ -71,6 +72,7 @@ describe('Register', () => {
     // Act
     await user.type(screen.getByLabelText('Email'), 'new@example.com');
     await user.type(screen.getByLabelText('Password'), 'correct-horse-battery-staple');
+    await user.type(screen.getByLabelText('Confirm Password'), 'correct-horse-battery-staple');
     await user.click(screen.getByRole('button', { name: 'Create account' }));
 
     // Assert

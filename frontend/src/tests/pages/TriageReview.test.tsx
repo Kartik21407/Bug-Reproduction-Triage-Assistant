@@ -104,6 +104,7 @@ function mockFetch({ report, triage, duplicates, onPatch, onSearch, onDecide }: 
     if (path.endsWith('/triage') && init?.method === 'PATCH') {
       return jsonResponse(onPatch?.(JSON.parse(init.body as string)) ?? makeTriage());
     }
+    if (path.endsWith('/triage/history')) return jsonResponse([]);
     if (path.endsWith('/triage')) return jsonResponse(triage ?? makeTriage());
     if (path.endsWith('/duplicates') && init?.method === 'POST') {
       return jsonResponse(onSearch?.() ?? SEARCHED);
@@ -270,6 +271,7 @@ describe('TriageReview', () => {
           503,
         );
       }
+      if (path.endsWith('/triage/history')) return jsonResponse([]);
       if (path.endsWith('/triage')) return jsonResponse(makeTriage());
       if (path.endsWith('/duplicates')) return jsonResponse(NOT_SEARCHED);
       return jsonResponse(makeReport());

@@ -48,7 +48,12 @@ describe('Analytics', () => {
 
   it('shows the three charts with their numbers', async () => {
     // Arrange
-    vi.spyOn(globalThis, 'fetch').mockImplementation(async () => jsonResponse(WITH_REPORTS));
+    vi.spyOn(globalThis, 'fetch').mockImplementation(async (url) => {
+      const path = String(url);
+      if (path.endsWith('/analytics/missing-fields'))
+        return jsonResponse({ analysed_reports: 0, fields: [] });
+      return jsonResponse(WITH_REPORTS);
+    });
 
     // Act
     renderAnalytics();
@@ -69,9 +74,12 @@ describe('Analytics', () => {
 
   it('shows an empty state instead of charts when there are no reports', async () => {
     // Arrange
-    vi.spyOn(globalThis, 'fetch').mockImplementation(async () =>
-      jsonResponse({ total_reports: 0, by_severity: [], by_category: [], by_week: [] }),
-    );
+    vi.spyOn(globalThis, 'fetch').mockImplementation(async (url) => {
+      const path = String(url);
+      if (path.endsWith('/analytics/missing-fields'))
+        return jsonResponse({ analysed_reports: 0, fields: [] });
+      return jsonResponse({ total_reports: 0, by_severity: [], by_category: [], by_week: [] });
+    });
 
     // Act
     renderAnalytics();
@@ -87,15 +95,18 @@ describe('Analytics', () => {
 
   it("asks for the signed-in user's own numbers only", async () => {
     // Arrange
-    const fetchSpy = vi
-      .spyOn(globalThis, 'fetch')
-      .mockImplementation(async () => jsonResponse(WITH_REPORTS));
+    const fetchSpy = vi.spyOn(globalThis, 'fetch').mockImplementation(async (url) => {
+      const path = String(url);
+      if (path.endsWith('/analytics/missing-fields'))
+        return jsonResponse({ analysed_reports: 0, fields: [] });
+      return jsonResponse(WITH_REPORTS);
+    });
 
     // Act
     renderAnalytics();
     await screen.findByText('Based on your 3 reports.');
 
     // Assert: the server scopes /analytics to the session's user
-    expect(fetchSpy.mock.calls.map(([url]) => String(url))).toEqual(['/api/analytics']);
+    expect(fetchSpy.mock.calls.map(([url]) => String(url))).toContain('/api/analytics');
   });
 });

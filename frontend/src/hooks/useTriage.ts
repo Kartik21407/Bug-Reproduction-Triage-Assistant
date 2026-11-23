@@ -1,14 +1,16 @@
 // Queries and mutations for triage (US-15, US-16, US-17): the four
-// suggested values with their reasons, and a person's override.
+// suggested values with their reasons, a person's override, and the log of
+// who changed what (US-18).
 
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { api } from '@/lib/api';
 import { reportKeys } from '@/hooks/useReports';
 import { generatedReportKeys } from '@/hooks/useGeneratedReport';
-import type { TriageOverrideRequest, TriageRead } from '@/types/api';
+import type { TriageChange, TriageOverrideRequest, TriageRead } from '@/types/api';
 
 export const triageKeys = {
   read: (reportId: string) => ['triage', reportId] as const,
+  history: (reportId: string) => ['triage', reportId, 'history'] as const,
 };
 
 // `enabled` lets a page wait until it knows the report has been analysed,
@@ -28,10 +30,19 @@ export function useOverrideTriage(reportId: string) {
       api.patch<TriageRead>(`/reports/${reportId}/triage`, body),
     onSuccess: (result) => {
       queryClient.setQueryData(triageKeys.read(reportId), result);
+      queryClient.invalidateQueries({ queryKey: triageKeys.history(reportId) });
       queryClient.invalidateQueries({ queryKey: generatedReportKeys.read(reportId) });
       // Severity is shown on ReportDetail and filtered on in History.
       queryClient.invalidateQueries({ queryKey: reportKeys.detail(reportId) });
       queryClient.invalidateQueries({ queryKey: ['reports', 'list'] });
     },
+  });
+}
+
+export function useTriageHistory(reportId: string, { enabled = true }: { enabled?: boolean } = {}) {
+  return useQuery({
+    queryKey: triageKeys.history(reportId),
+    queryFn: () => api.get<TriageChange[]>(`/reports/${reportId}/triage/history`),
+    enabled: Boolean(reportId) && enabled,
   });
 }

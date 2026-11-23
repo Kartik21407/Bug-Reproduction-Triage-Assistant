@@ -18,7 +18,8 @@ import GeneratedReport from '@/pages/GeneratedReport';
 import GitHubIssue from '@/pages/GitHubIssue';
 import GitHubSettings from '@/pages/GitHubSettings';
 import Analytics from '@/pages/Analytics';
-import { ProtectedRoute } from '@/components/layout/ProtectedRoute';
+import Admin from '@/pages/Admin';
+import { AdminRoute, ProtectedRoute } from '@/components/layout/ProtectedRoute';
 
 export function AppRouter() {
   return (
@@ -38,6 +39,9 @@ export function AppRouter() {
         <Route path="/reports/:id/github" element={<GitHubIssue />} />
         <Route path="/settings/github" element={<GitHubSettings />} />
         <Route path="/analytics" element={<Analytics />} />
+        <Route element={<AdminRoute />}>
+          <Route path="/admin" element={<Admin />} />
+        </Route>
       </Route>
       <Route path="*" element={<Navigate to="/welcome" replace />} />
     </Routes>
