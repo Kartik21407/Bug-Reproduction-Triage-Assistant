@@ -107,6 +107,8 @@ describe('Analytics', () => {
     await screen.findByText('Based on your 3 reports.');
 
     // Assert: the server scopes /analytics to the session's user
-    expect(fetchSpy.mock.calls.map(([url]) => String(url))).toContain('/api/analytics');
+    const calledUrls = fetchSpy.mock.calls.map(([url]) => String(url));
+    expect(calledUrls).toContain('/api/analytics');
+    expect(calledUrls).toContain('/api/analytics/missing-fields');
   });
 });
